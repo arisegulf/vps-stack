@@ -63,6 +63,47 @@ Our strategy is:
 2.  **Off-site Storage (The "Vault"):** These backup files are stored in a secure, separate cloud storage service (our "off-site vault").
 3.  **Interim Solution:** For now, backups can be manually downloaded and saved to Google Drive and a local PC. This is a good temporary measure.
 
+### 3.3. The Golden Workflow in Practice
+
+Here are the specific commands to follow the "Golden Workflow".
+
+**Step 1: Develop Locally (in the "Workshop")**
+
+Make your changes to the files in the `D:\vps-stack` directory.
+
+**Step 2: Commit and Push Changes (update the "Recipe Book")**
+
+Open a terminal in the `D:\vps-stack` directory and run the following commands:
+
+```bash
+# Add all changed files to the staging area
+git add .
+
+# Commit the changes with a descriptive message
+git commit -m "Your descriptive commit message"
+
+# Push the changes to your GitHub repository
+git push
+```
+
+**Step 3: Deploy to Production (update the "Showroom")**
+
+Log into your VPS and pull the latest changes:
+
+```bash
+# Log into your VPS
+ssh root@193.203.161.27
+
+# Navigate to your project directory
+cd /root/my_project
+
+# Pull the latest changes from GitHub
+git pull
+
+# Rebuild and restart your services with the new changes
+docker-compose up -d --build
+```
+
 ---
 
 ## 4. Production Environment: VPS Service Manual ("The Showroom")
