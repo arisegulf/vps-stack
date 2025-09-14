@@ -1,0 +1,187 @@
+services:
+  # 1. Reverse Proxy (Traffic Controller)
+  nginx-proxy:
+    image: nginx:latest
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./website_data/arisegulf.com:/var/www/html/arisegulf.com
+      - ./website_data/blog.arisegulf.com:/var/www/html/blog.arisegulf.com
+      - ./website_data/dearzindagi.space:/var/www/html/dearzindagi.space
+      - ./website_data/islam.dearzindagi.space:/var/www/html/islam.dearzindagi.space
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - app-network
+
+  # 2. Main Database
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - app-network
+
+  # 3. AriseGulf Website (WordPress)
+  arisegulf-web:
+    image: wordpress:latest
+    container_name: arisegulf-web
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: "arisegulf_db"
+      WORDPRESS_DB_USER: "arisegulf_user"
+      WORDPRESS_DB_PASSWORD: ${ARISEGULF_DB_PASSWORD}
+    volumes:
+      - ./website_data/arisegulf.com:/var/www/html
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 4. AriseGulf Blog Website (WordPress)
+  blog-web:
+    image: wordpress:latest
+    container_name: blog-web
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: "arisegulf_blog_db"
+      WORDPRESS_DB_USER: "blog_user"
+      WORDPRESS_DB_PASSWORD: ${BLOG_DB_PASSWORD}
+    volumes:
+      - ./website_data/blog.arisegulf.com:/var/www/html
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 5. Dear Zindagi Website (WordPress)
+  dearzindagi-web:
+    image: wordpress:latest
+    container_name: dearzindagi-web
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: "dearzindagi_db"
+      WORDPRESS_DB_USER: "dearzindagi_user"
+      WORDPRESS_DB_PASSWORD: ${DEARZINDAGI_DB_PASSWORD}
+    volumes:
+      - ./website_data/dearzindagi.space:/var/www/html
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 6. Islam Website (WordPress)
+  islam-web:
+    image: wordpress:latest
+    container_name: islam-web
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: "islam_db"
+      WORDPRESS_DB_USER: "islam_user"
+      WORDPRESS_DB_PASSWORD: ${ISLAM_DB_PASSWORD}
+    volumes:
+      - ./website_data/islam.dearzindagi.space:/var/www/html
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 7. n8n Service
+  n8n:
+    image: n8nio/n8n:1.109.2 # Pinning to a specific, stable version
+    container_name: n8n
+    restart: always
+    environment:
+      # This is the most important line. It tells n8n its public address.
+      - WEBHOOK_URL=https://n8n.arisegulf.com/
+      # Setting the correct timezone is a good practice.
+      - GENERIC_TIMEZONE=Asia/Kolkata
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - app-network
+
+  # 8. Memos Service
+  memos:
+    image: neosmemo/memos:latest
+    container_name: memos
+    restart: always
+    volumes:
+      - memos_data:/var/opt/memos
+    networks:
+      - app-network
+
+  # 9. Flowise Service
+  flowise:
+    image: flowiseai/flowise:latest
+    container_name: flowise
+    restart: always
+    volumes:
+      - flowise_data:/root/.flowise
+    environment:
+      - FLOWISE_API_KEY=${FLOWISE_API_KEY}
+    networks:
+      - app-network
+
+  # 10. Certbot Service for SSL Certificates
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+  # 11. Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant-db
+    restart: always
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
+    networks:
+      - app-network
+
+  # 12. Streamlit Frontend App
+  streamlit-app:
+    build: ./streamlit_app
+    container_name: streamlit-app
+    restart: always
+    # The 'command' is removed from here to allow the Dockerfile's CMD to run.
+    environment:
+      - FLOWISE_API_URL=http://flowise:3000/api/v1/prediction/f308912c-3937-4df5-945f-df1d16e270df
+      - FLOWISE_API_KEY=${FLOWISE_API_KEY}
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true
+
+volumes:
+  db_data:
+  n8n_data:
+  memos_data:
+  flowise_data:
+  qdrant_data:

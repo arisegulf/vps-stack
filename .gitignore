@@ -1,0 +1,14 @@
+# Ignore data, logs, and other non-code files
+/website_data/
+/certbot/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore environment files
+.env
