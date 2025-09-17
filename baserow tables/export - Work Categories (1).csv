@@ -1,0 +1,7 @@
+﻿id,Category Name,Bill Line Items,Master Rate Card,Sub-Tasks,Pole Installation
+1,ODF,"21,22,23","unnamed row 2,unnamed row 3,unnamed row 4","1st Cable for osp,Common Cable osp",22
+2,Refilling,,,,
+3,Other,"24,26,27","unnamed row 1,unnamed row 5,unnamed row 8","Pole installation,Pole extention (angle on pole),Transport,FDMS,""Painting of NE (FAT, ODF AND FMS)"",FLEXIBLE,Documentation,Client Entertainment",
+4,Splicing,,unnamed row 7,"Splicing per core,FAT splicing",
+5,Cabling,,"unnamed row 6,unnamed row 9","Cabling Arial for Refilling,Cabling Arial for Cutover",
+6,Cut-Over,,,,

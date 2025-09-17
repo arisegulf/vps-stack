@@ -46,6 +46,19 @@
 - **CWO-84222/2 (Refilling Raipur):** Field work done, pending A2Z internal team for closure.
 - **CWO-91144/1 (Jawahar Nagar):** 2 of 4 ODFs RFS done, awaiting progress on others.
 
+**Date: 14-Sep-2025 (Today's Work)**
+*   **Focus:** Setting up professional VPS management with Git, and installing & configuring Metabase.
+*   **Key Achievements:**
+    *   **Professional VPS Management Setup:**
+        *   Integrated Git with the VPS project, version-controlled `docker-compose.yml` and other config files, and backed them up on GitHub (`https://github.com/arisegulf/vps-stack.git`).
+        *   Established the "Golden Workflow" for deploying changes from local to VPS, and documented it in `Arise_Operations_Manual.md`.
+    *   **Metabase Installation & Secure Access:**
+        *   Installed Metabase on VPS via Docker Compose.
+        *   Configured Nginx for `https://metabase.arisegulf.com` and secured it with a Let's Encrypt SSL certificate.
+    *   **Metabase to Baserow Connection (In Progress):**
+        *   Successfully connected Metabase to the Baserow database, identified the correct password, and fixed the PostgreSQL `listen_addresses` issue.
+*   **Pending Task:** Troubleshooting `pg_hba.conf` authentication error to finalize Metabase-Baserow connection.
+
 **Tools Used/To Learn:**
 - Git, GitHub, Nginx, n8n, Zapier, Power BI, Flowise.
 

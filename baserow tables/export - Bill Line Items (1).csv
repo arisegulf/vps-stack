@@ -1,0 +1,7 @@
+﻿id,Line Item ID,Cluster Name,Work Categories,Related ODF,Sub-Tasks,Vendor Qty,Unit,Vendor Rate,Verified Qty,Agreed Rate,Notes,Line Item Status,Bill,Vendor Amount,Payable Amount,Team (from Bill),Bill Date (from Bill),Bill Status
+1,21,Maroda,ODF,RDF06,1st Cable for osp,2023,meters,16,2023,16,,,ROSHAN-JUL25-01,32368,32368,Roshan,2025-07-25,Done
+2,22,Maroda,ODF,RDF08,1st Cable for osp,2098,meters,16,2098,16,,,ROSHAN-JUL25-01,33568,33568,Roshan,2025-07-25,Done
+3,23,Maroda,ODF,RDF06,Common Cable osp,79,meters,6,79,6,,,ROSHAN-JUL25-01,474,474,Roshan,2025-07-25,Done
+4,24,Maroda,Other,RDF08,Pole extention (angle on pole),2,nos,450,2,450,,,ROSHAN-JUL25-01,900,900,Roshan,2025-07-25,Done
+5,26,Maroda,Other,RDF06,Pole installation,4,nos,2000,4,2000,,,ROSHAN-JUL25-01,8000,8000,Roshan,2025-07-25,Done
+6,27,Maroda,Other,RDF06,Pole extention (angle on pole),2,nos,450,2,450,,,ROSHAN-JUL25-01,900,900,Roshan,2025-07-25,Done

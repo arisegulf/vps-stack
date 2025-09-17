@@ -1,0 +1,15 @@
+﻿id,Name,Work Category,Bill Line Items,Master Rate Card
+1,1st Cable for osp,ODF,"21,22",unnamed row 2
+2,Common Cable osp,ODF,23,unnamed row 3
+3,Splicing per core,Splicing,,unnamed row 1
+4,Pole installation,Other,26,unnamed row 4
+5,Pole extention (angle on pole),Other,"24,27",unnamed row 5
+6,Cabling Arial for Refilling,Cabling,,unnamed row 6
+7,FAT splicing,Splicing,,unnamed row 7
+8,Transport,Other,,
+9,FDMS,Other,,
+10,"Painting of NE (FAT, ODF AND FMS)",Other,,unnamed row 8
+11,FLEXIBLE,Other,,
+12,Documentation,Other,,
+13,Client Entertainment,Other,,
+14,Cabling Arial for Cutover,Cabling,,unnamed row 9
