@@ -114,6 +114,7 @@ services:
     environment:
       # This is the most important line. It tells n8n its public address.
       - WEBHOOK_URL=https://n8n.arisegulf.com/
+      - N8N_TRUST_PROXY=true
       # Setting the correct timezone is a good practice.
       - GENERIC_TIMEZONE=Asia/Kolkata
     volumes:

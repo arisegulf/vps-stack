@@ -179,43 +179,86 @@ Here's a breakdown of each service defined in your `docker-compose.yml` on the V
 
 ### 3.10. Link Shortener & Preview Generator (`link.arisegulf.com`)
 
-This is a critical service for creating custom, branded short links (e.g., `link.arisegulf.com/some-link`) that can be shared with clients. It also generates a custom preview (title, description, and image) when the link is shared on social media or messaging apps.
+This is a critical service for creating custom, branded short links (e.g., `link.arisegulf.com/some-link`) that generate a rich preview (title, description, image) when shared on social media or messaging apps.
 
-*   **Core Technology:** This functionality is handled entirely by the **`nginx-proxy`** service. The configuration file `link.arisegulf.com.conf` contains the logic for the redirects and social media previews.
-*   **Data Source for Links:** All custom links are managed in a dedicated Baserow table for easy reference and management.
-    *   **Baserow Link Table:** [https://baserow.arisegulf.com/public/grid/r99NUoMfk6RQOJ1iSVuALCdaFxvcOtHekC813422u5I](https://baserow.arisegulf.com/public/grid/r99NUoMfk6RQOJ1iSVuALCdaFxvcOtHekC813422u5I)
+*   **Core Technology:** This is handled by the **`nginx-proxy`** service. The configuration file `link.arisegulf.com.conf` contains the logic.
+*   **Single Source of Truth:** All links should first be planned in the `Link Generator` table in Baserow.
 
-#### Workflow for Adding/Updating a Short Link
+#### Workflow for Adding a New Short Link
 
-The process is simple and involves editing a local file and then deploying it to the server.
+**Step 1: Update the Local Nginx Configuration File**
 
-**Step 1: Edit the Configuration File on Your PC**
+1.  **Open the file** on your local PC: `D:\vps-stack\nginx\conf.d\link.arisegulf.com.conf`.
+2.  **Copy and paste** the template block below, adding it before the `--- Default fallback ---` section.
+3.  **Edit the template** with your new link's details (path, destination URL, title, description).
 
-*   The master configuration file is located on your local computer.
-*   **File Path:** `D:\ai-stack\cli demo\nginx\conf.d\link.arisegulf.com.conf`
-*   You need to add a new `location` block for each new short link, copying the structure of the existing ones.
+**Code Template:**
+```nginx
+    # --- Redirect for /your-new-link ---
+    location = /your-new-link {
+        set $redirect_url "https://your-destination-url.com";
+        add_header Content-Type 'text/html; charset=utf-8';
+        return 200 '
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your Link Title</title>
+    <meta property="og:title" content="Your Link Title">
+    <meta property="og:description" content="Your link description or subtitle.">
+    <meta property="og:image" content="https://arisegulf.com/arise-logo.png">
+    <meta property="og:url" content="https://link.arisegulf.com/your-new-link">
+    <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+    <p>Redirecting...</p>
+    <script>window.location.href = "$redirect_url";</script>
+</body>
+</html>';
+    }
+```
 
-**Step 2: Upload the Updated File to the VPS**
+**Step 2: Commit and Push the Change via Git**
 
-*   Use the `scp` command from your local PC's terminal to securely copy the file to the server.
-    ```bash
-    scp "D:\ai-stack\cli demo\nginx\conf.d\link.arisegulf.com.conf" root@193.203.161.27:/root/my_project/nginx/conf.d/
-    ```
+Open a terminal in your `D:\vps-stack` directory and run these commands:
 
-**Step 3: Activate the Changes on the VPS**
+```bash
+# Stage the change
+git add .
 
-*   Log in to your VPS (`ssh root@193.203.161.27`).
-*   Navigate to the project directory:
-    ```bash
-    cd ~/my_project
-    ```
-*   Run the following single command to restart the Nginx proxy. This will apply your changes.
-    ```bash
-    docker compose restart nginx-proxy
-    ```
-*   **That's it!** No other commands are needed. The new link is now live.
+# Commit the change with a clear message
+git commit -m "feat: add /your-new-link short link"
 
-**Important Note on Caching:** When you share a link, apps like WhatsApp and Facebook cache the preview. If you update a link's title or image, you may need to use a tool like the [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) to force it to fetch the new information.
+# Push the change to GitHub
+git push
+```
+
+**Step 3: Deploy the Change on the VPS**
+
+Log in to your VPS and run these commands:
+
+```bash
+# Log in to your VPS
+ssh root@193.203.161.27
+
+# Navigate to your project directory
+cd /root/my_project
+
+# Pull the latest changes
+git pull
+
+# Restart the Nginx service to activate the link
+docker compose restart nginx-proxy
+```
+
+**Step 4: Verify and Clear Cache (Crucial!)**
+
+Your new link is live, but apps like WhatsApp will show an old, cached preview. You **must** force them to update.
+
+1.  Go to the **[Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)**.
+2.  Enter your new short link (e.g., `https://link.arisegulf.com/your-new-link`).
+3.  Click **Debug**, and then on the next page, click **"Scrape Again"**.
+
+Your link will now show the correct, beautiful preview when shared.
 
 ### 3.11. `baserow` (Self-Hosted Relational Database)
 
