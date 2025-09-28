@@ -1,0 +1,122 @@
+{
+  "name": "[1] Request Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-request",
+        "options": {}
+      },
+      "id": "50dfd640-4b47-4433-99d2-f88298885a53",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1080,
+        -500
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "request_id",
+              "value": "={{ $json.body.items[0].id }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "team_name",
+              "value": "={{ $json.body.items[0].Team[0].value }}"
+            },
+            {
+              "name": "notes",
+              "value": "={{ $json.body.items[0].Notes }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "amount",
+              "value": "={{ $json.body.items[0]['Amount Require'] }}"
+            }
+          ]
+        },
+        "options": {
+          "keepOnlySet": true
+        }
+      },
+      "id": "15f2df71-4e51-48f1-b139-8fdfa6108342",
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -860,
+        -500
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "7522842632",
+        "text": "\n**New Payment Request**\n\n**From:** {{ $json.team_name }}\n**Amount:** {{ $json.amount }}\n**Notes:** {{ $json.notes }}\n**Request ID:** {{ $json.request_id }}",
+        "additionalFields": {
+          "replyMarkup": {
+            "inline_keyboard": [
+              [
+                {
+                  "text": "✅ Approve",
+                  "callback_data": "approve_{{ $json.request_id }}"
+                },
+                {
+                  "text": "❌ Reject",
+                  "callback_data": "reject_{{ $json.request_id }}"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "id": "45a45d13-114e-412e-9531-09154141430f",
+      "name": "Send Approval Request",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        -500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Send Approval Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "KH2t0W5vLwZ34uh0"
+}

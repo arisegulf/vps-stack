@@ -1,0 +1,184 @@
+{
+  "name": "[2] Process Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ]
+      },
+      "id": "0129541e-4a47-441b-998b-3370e5871e59",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1080,
+        -300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.callback_query.data }}",
+              "operation": "startsWith",
+              "value2": "approve_"
+            }
+          ]
+        }
+      },
+      "id": "9f42053a-4a01-469c-849c-410547aa15fe",
+      "name": "If Approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -860,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "database_table_row",
+        "operation": "update",
+        "tableId": null,
+        "rowId": "={{ $json.callback_query.data.split('_')[1] }}",
+        "fields": {
+          "values": [
+            {
+              "name": "Status",
+              "value": "Approved"
+            }
+          ]
+        }
+      },
+      "id": "d1af241d-3b5a-4067-bd37-410547aa15fe",
+      "name": "Update Status to Approved",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -420
+      ],
+      "credentials": {
+        "baserowApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "database_table_row",
+        "operation": "update",
+        "tableId": null,
+        "rowId": "={{ $json.callback_query.data.split('_')[1] }}",
+        "fields": {
+          "values": [
+            {
+              "name": "Status",
+              "value": "Rejected"
+            }
+          ]
+        }
+      },
+      "id": "acbacfa1-8a6e-48ab-b7a9-19c5b07ded87",
+      "name": "Update Status to Rejected",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -180
+      ],
+      "credentials": {
+        "baserowApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "GULFISHAS_CHAT_ID",
+        "text": "=Please pay request ID: {{ $json.callback_query.data.split('_')[1] }}",
+        "additionalFields": {
+          "replyMarkup": {
+            "inline_keyboard": [
+              [
+                {
+                  "text": "✅ Paid",
+                  "callback_data": "paid_{{ $json.callback_query.data.split('_')[1] }}"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "id": "22090c96-ef4d-4953-adf9-62b477ec0e7e",
+      "name": "Notify Gulfisha to Pay",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -420,
+        -420
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If Approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Approved": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Status to Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Status to Approved": {
+      "main": [
+        [
+          {
+            "node": "Notify Gulfisha to Pay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "aNewWorkflowId1"
+}

@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  appsmith:
+    image: appsmith/appsmith-ee
+    container_name: appsmith
+    ports:
+      - "8081:80"
+    volumes:
+      - ./stacks/appsmith:/appsmith-stacks
+    environment:
+      - VIRTUAL_HOST=appsmith.arisegulf.com
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=appsmith.arisegulf.com
+      - LETSENCRYPT_EMAIL=arisegulf@gmail.com
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true
