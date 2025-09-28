@@ -6,6 +6,10 @@ services:
       context: ./n8n-mcp
     container_name: n8n-mcp
     restart: always
+    environment:
+      - TRANSPORT=http
+      - PORT=3000
+      - N8N_URL=http://n8n:5678
     networks:
       - app-network
 
