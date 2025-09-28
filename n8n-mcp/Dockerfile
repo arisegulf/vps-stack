@@ -13,6 +13,9 @@ RUN git clone https://github.com/czlonkowski/n8n-mcp.git .
 # Install app dependencies
 RUN npm install
 
+# Build the application
+RUN npm run build
+
 # Bundle app source
 COPY . .
 
