@@ -5,11 +5,7 @@ services:
     build:
       context: ./n8n-mcp
     container_name: n8n-mcp
-    environment:
-      - VIRTUAL_HOST=n8n-mcp.arisegulf.com
-      - VIRTUAL_PORT=3000
-      - LETSENCRYPT_HOST=n8n-mcp.arisegulf.com
-      - LETSENCRYPT_EMAIL=arisegulf@gmail.com
+    restart: always
     networks:
       - app-network
 
