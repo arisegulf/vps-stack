@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   n8n-mcp:
     build:
@@ -7,7 +5,7 @@ services:
     container_name: n8n-mcp
     restart: always
     environment:
-      - TRANSPORT=http
+      - MCP_MODE=http
       - PORT=3000
       - N8N_URL=http://n8n:5678
     networks:
