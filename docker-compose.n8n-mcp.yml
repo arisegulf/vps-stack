@@ -8,6 +8,7 @@ services:
       - MCP_MODE=http
       - PORT=3000
       - N8N_URL=http://n8n:5678
+      - AUTH_TOKEN=y_1@_g!_s_t_r_o_n_g_r_a_n_d_o_m_t_o_k_e_n_h_e_r_e_r_e_p_l_a_c_e_m_e_w_i_t_h_a_r_e_a_l_o_n_e
     networks:
       - app-network
 
