@@ -1,3 +1,7 @@
+include:
+  - docker-compose.appsmith.yml
+  - docker-compose.n8n-mcp.yml
+
 services:
   # 1. Reverse Proxy (Traffic Controller)
   nginx-proxy:
