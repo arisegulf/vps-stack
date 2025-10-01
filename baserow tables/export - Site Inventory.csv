@@ -1,0 +1,42 @@
+﻿id,Site No,Cluster Name,OSP Execution From,Team,Planned HPS,GPON,Society/Building/Area name,Priority,Work Status,Cabling Status,Splicing,NE Installtion Status,Pole,Painting,Document Preparation,Online AT,AT Offer Date,Audit Date copy,NC POINT,NC CLOSER DATE,Total Cable for OSP,2ND Cable,Pole extention (angle on pole),Bill Line Items,Pole Installation,ODF ALL DOCS,AUDIT DATE,NC Closer Status,FDMS AT - NOC,1st Cable for OSP,Common Cable osp 2,Measurement Book
+1,RYA01,Kurud Road,Ring No. 1,Sunil,328,3,Sanjay Rungta College,Medium, WIP,WIP,,,,,,,,,,,3391,,,,,,,,,,,
+2,RYA02,Kurud Road,Ring No. 1,Sunil,416,4,Saket Nagar Kohka,Medium, WIP,COMPLETED,COMPLETED,,,WIP,WIP,,,,,,,,,7,22,,,,,,,3
+3,RYA03,Kurud Road,Ring No. 2,Sahil,192,2,Purani Basti Kohka,Medium,Hold,WIP,,,,,,,,,,,,,,,,,,,,,,4
+4,RYA04,Kurud Road,Ring No. 2,Sahil,304,3,Purani Basti Kohka,Medium,Hold,WIP,,,,,,,,,,,,,,,,,,,,,,6
+5,RYA05,Kurud Road,Ring No. 2,Sahil,392,4,Purani Basti Mangal Market Kohka,Medium,Hold,HOLD,,,,,,,,,,,,,,,,,,,,,,5
+6,RYA06,Kurud Road,Ring No. 3,Sunil,408,4,Hanuman Mandir Chowk,High, WIP,COMPLETED,COMPLETED,COMPLETED,6,COMPLETED,COMPLETED,COMPLETED,,,,,,,,,,,,,,,,
+7,RYA07,Kurud Road,Ring No. 3,Sunil,400,4,Chandra Nagar Bhilai,High, WIP,COMPLETED,COMPLETED,,,WIP,WIP,,,,,,,,,,,,,,,,,
+8,RYA08,"Kurud Road,Khursipar Pragati Nagar",Ring No. 3,Sunil,416,4,Shivaji Nagar,High, WIP,WIP,WIP,,,WIP,WIP,,,,,,,,,,,,,,,,,
+9,RYA09,"Kurud Road,Khursipar Pragati Nagar",Ring No. 1,Sunil,24,1,Kurud Road Rungta College,Medium, WIP,COMPLETED,,,,,,,,,,,,,,,,,,,,,,
+10,RBU01,Khursipar Pragati Nagar,From RBU,Not alloted,104,,Link Road Camp2,Low,,,,,,,,,,,,,,,,,,,,,,,,
+11,RBU02,Khursipar Pragati Nagar,From RBU01,Not alloted,184,,Vijay Complex,Low,,,,,,,,,,,,,,,,,,,,,,,,
+12,RBU03,Khursipar Pragati Nagar,From RBU,Not alloted,224,,Ravidas Nagar,Low,,,,,,,,,,,,,,,,,,,,,,,,
+13,RBU04,Khursipar Pragati Nagar,"From JC 21.213360, 81.374032",Not alloted,200,,Shyam Nagar,Low,,,,,,,,,,,,,,,,,,,,,,,,
+14,RBV01,Khursipar Pragati Nagar,From RBV,Dampu,200,4,Baikunth Dham,High,,,,,,,,,,,,,,,,,,,,,,,,
+15,RBV02,Khursipar Pragati Nagar,From RBV,Dampu,200,4,Santoshi Para,High,,,,,,,,,,,,,,,,,,,,,,,,
+16,RBV03,Khursipar Pragati Nagar,"From JC  21.218530, 81.373443",Sahil,248,4,Ganesh Chowk,High, WIP,WIP,,,,,,,,,,,,,,,,,,,,,,
+17,RBV04,Khursipar Pragati Nagar,"From JC 21.218105, 81.373429",Sahil,240,4,Kabir Kuti,High, WIP,,,,,,,,,,,,,,,,,,,,,,,
+18,RBV05,Khursipar Pragati Nagar,From RBV,Roshan,216,4,Pragati Nagar camp1,High, WIP,COMPLETED,WIP,,,,,,,,,,,,,,,,,,,,,
+19,RBV06,Khursipar Pragati Nagar,From RBV01,Not alloted,256,4,Vijay Nagar,High,,,,,,,,,,,,,,,,,,,,,,,,
+20,RBV07,Khursipar Pragati Nagar,From JC-21.218982 81.369261,Roshan,200,4,Shanti Para,High, WIP,COMPLETED,WIP,,,,,,,,,,,,,,,,,,,,,
+21,RCO01,Khursipar Pragati Nagar,From RCO,Not alloted,152,,Amrapali Vanchal City,Low,,,,,,,,,,,,,,,,,,,,,,,,
+22,RCO02,Khursipar Pragati Nagar,From RCO01,Not alloted,256,,Amrapali Vanchal City,Low,,,,,,,,,,,,,,,,,,,,,,,,
+23,"RFY01
+",Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+24,"RFY02
+",Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+25,"RFY03
+",Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+26,RFY04,Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+27,RFY05,Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+28,RFY06,Changurabhata Ayodhya Nagar,,Sunil,,,,High, WIP,COMPLETED,COMPLETED,COMPLETED,5,COMPLETED,COMPLETED,COMPLETED,2025-09-02,2025-09-06,,,,,,,,,,,,,,
+29,RFY07,Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+30,"RFY08
+",Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+31,RFY09,Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+32,RFY10,Changurabhata Ayodhya Nagar,,Sunil,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+33,RDF03,Maroda,,Dampu,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+34,RDF06,Maroda,,Roshan,,,,Done,Completed,COMPLETED,COMPLETED,COMPLETED,4,,,COMPLETED,,2025-07-20,,2025-07-21,2023,79,2,"21,23,26,27",,,,,,2023,79,
+35,RDF07,Maroda,,Dampu,,,,Done,Completed,,,,,,,,,,,,,,,,,,,,,,,
+36,RDF08,Maroda,,Roshan,,,,Done,Completed,COMPLETED,COMPLETED,COMPLETED,,,,COMPLETED,,2025-07-20,,2025-07-21,2098,,2,"22,24",,,,,,2098,,
+37,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

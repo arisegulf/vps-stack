@@ -1,0 +1,5 @@
+﻿id,ID,Site No,Work Category,MB Type,MB Status,MB Number,MB Submission,MB Submitted Date,POLE EXTENTION,6M GI Pole Installtion,8M GI Pole Installtion,Total Cable Laying,1st Cable Laying,2nd Cable Laying,Common Cable Laying 2,Pole Dismantal,48 Fiber Cable,24 Fiber Cable,12 Fiber Cable,SS STRIP 207,SS STRIP 107,BIG BUCKLE,Small BUCKLE,BIG ANCHER,SUSPENSON BIG,BIG DEDAN- UB,16f Fat,SPLITTER 2.16,SPLITTER 2.8,SPLITTER 1.8,96 JC ODF,48 FDMS,PIGTAIL,LOOP BRACKET,8M GI Pole,6M GI Pole,6.2M FRP Pole,48F - 3% Cable Wastage,24F - 3% Cable Wastage,12F - 3% Cable Wastage,Notes,Active
+3,3,RYA02,ODF,SERVICE,WIP,,Pending,,,,,6325,2475,1380,2470,,,,,,,,,,,,,,,,,,,,,,,,,,,True
+4,4,RYA03,ODF,SERVICE,WIP,,Pending,,,,,4113,2287,836,990,,,,,,,,,,,,,,,,,,,,,,,,,,,True
+5,5,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,False
+6,6,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,False

@@ -1,0 +1,4 @@
+﻿id,Payment ID,Team,Payment Date,Amount Require,Amount Paid,Payment Method,Notes,Status,Attachments
+12,12,Sunil,2025-09-18,30000,30000,UPI,Labour payment,Done,
+21,21,Arun,2025-09-30,2000,,,Self,,
+22,22,Dampu,2025-09-30,50000,,,Please check and pay,,Screenshot_20250912_182047_PhonePe.jpg (https://baserow.arisegulf.com/media/user_files/K3HhqqUnREdsOXoITrfYoPRsgNOCzHwU_a1d87080e52323cb1fef2c131c111498a2e8fe44eef572b29c165c03c45ba125.jpg)

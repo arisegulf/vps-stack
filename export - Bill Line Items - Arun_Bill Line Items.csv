@@ -1,0 +1,4 @@
+﻿id,Line Item ID,Team (from Bill),Bill,Bill Date (from Bill),Cluster Name,Work Categories,Sub-Tasks,Related ODF,Unit,Vendor Qty,Vendor Rate,Vendor Amount,Total Cable MB,Verified Qty,Agreed Rate,Payable Amount,Line Item Status,Notes
+9,9,Arun,ARUN-SEP25-01,2025-09-30,Kurud Road,ODF,Cabling ODF,RYA03,meters,3312,6,19872,4113,4113,6,24678,Approved,
+10,10,Arun,ARUN-SEP25-01,2025-09-30,Kurud Road,ODF,Cabling ODF,RYA04,meters,4539,6,27234,5283,5283,6,31698,Approved,
+11,11,Arun,ARUN-SEP25-01,2025-09-30,Kurud Road,ODF,Cabling ODF,RYA05,meters,6149,6,36894,7136,7136,6,42816,Approved,

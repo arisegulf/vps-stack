@@ -222,6 +222,7 @@ This is a critical service for creating custom, branded short links (e.g., `link
 Open a terminal in your `D:\vps-stack` directory and run these commands:
 
 ```bash
+
 # Stage the change
 git add .
 
@@ -237,6 +238,7 @@ git push
 Log in to your VPS and run these commands:
 
 ```bash
+
 # Log in to your VPS
 ssh root@193.203.161.27
 
@@ -312,3 +314,125 @@ Your link will now show the correct, beautiful preview when shared.
 (This section will be similar to your local manual, adapted for a VPS context. We can refine it later.)
 
 ---
+### 3.12. `n8n-mcp` (Model Context Protocol Server for n8n Documentation)
+
+*   **Purpose:** A specialized server that integrates with n8n for managing and serving n8n node documentation and workflow management via the Model Context Protocol.
+*   **Image:** Built from local `n8n-mcp` Dockerfile.
+*   **Container Name:** `n8n-mcp`
+*   **Public URL:** `https://mcp.arisegulf.com/`
+*   **Internal Port:** `3000`
+*   **Environment Variables:**
+    *   `MCP_MODE=http`: Forces the server to run in HTTP mode (listening on a port).
+    *   `PORT=3000`: Specifies the internal port the server listens on.
+    *   `N8N_URL=http://n8n:5678`: Configures the n8n instance it interacts with.
+    *   `AUTH_TOKEN=y_1@_g!_s_t_r_o_n_g_r_a_n_d_o_m_t_o_k_e_n_h_e_r_e_r_e_p_l_a_c_e_m_e_w_i_t_h_a_r_e_a_l_o_n_e`: **Crucial for authentication.** This token is required for interacting with the MCP server.
+*   **Nginx Configuration (`nginx/conf.d/n8n-mcp.conf`):**
+    ```nginx
+    server {
+        listen 80;
+        server_name mcp.arisegulf.com;
+
+        # Rule for Let's Encrypt renewal (webroot)
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
+
+        # Redirect all other HTTP traffic to HTTPS
+        location / {
+            return 301 https://$host$request_uri;
+        }
+    }
+
+    server {
+        listen 443 ssl http2;
+        server_name mcp.arisegulf.com;
+
+        ssl_certificate /etc/letsencrypt/live/mcp.arisegulf.com/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/mcp.arisegulf.com/privkey.pem;
+
+        location / {
+            proxy_pass http://n8n-mcp:3000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+    }
+    ```
+*   **Key Operations:**
+    *   **Access UI:** `https://mcp.arisegulf.com/`
+    *   **Health Check:** `https://mcp.arisegulf.com/health`
+    *   **MCP Endpoint:** `https://mcp.arisegulf.com/mcp`
+    *   **Authentication:** Use the `AUTH_TOKEN` in the `Authorization: Bearer <token>` header for POST requests to `/mcp`.
+*   **Interview Points:**
+    *   "I've deployed a custom Model Context Protocol server for n8n documentation, enabling advanced workflow management and node interaction."
+    *   "It's secured with Let's Encrypt SSL and exposed via Nginx reverse proxy, demonstrating secure and scalable application deployment."
+    *   "Authentication is handled via a Bearer Token, ensuring secure API access."
+
+### 3.13. `arun-dashboard` (React Frontend for Baserow Data)
+
+*   **Purpose:** A custom-built React web application to provide a modern, mobile-friendly dashboard for individual team members (e.g., Arun) to view their financial summary, work details, and payment history directly from Baserow.
+*   **Technology:** React.js, Baserow API, Custom CSS.
+*   **Data Source:** Baserow API.
+    *   **API Key:** `EDx5sItLzGn3hzyYCZDmDsIjiWVASnlq` (Store securely, e.g., in environment variables on VPS)
+    *   **Database ID:** `174`
+    *   **Table IDs:**
+        *   `Team`: `701`
+        *   `Bill Line Items`: `700`
+        *   `Payment System`: `707`
+*   **Key Features:**
+    *   **Financial Summary:** Displays Total Billed Amount, Total Paid, and Remaining Balance.
+    *   **Work Details:** Shows site-wise breakdown of claimed vs. verified quantities and payable amounts.
+    *   **Payment History:** Lists all payments made with dates, amounts, methods, and notes.
+    *   **Branding:** Includes Arise logo and custom punchline.
+    *   **Mobile-Friendly:** Responsive design for optimal viewing on various devices.
+
+#### Deployment on VPS
+
+1.  **Build the React Application (Local PC):**
+    *   Navigate to the `arun-dashboard` project directory: `cd D:ps-stackrun-dashboard`
+    *   Run the build command: `npm run build`
+    *   This will create a `build` folder containing all optimized static files.
+
+2.  **Transfer Files to VPS:**
+    *   Transfer the **contents** of the local `build` folder to a directory on your VPS, e.g., `/var/www/html/arun_dashboard/`.
+    *   You can use `scp` or `sftp` for this. Example `scp` command:
+        ```bash
+        scp -r D:ps-stackrun-dashboarduild/* user@your_vps_ip:/var/www/html/arun_dashboard/
+        ```
+
+3.  **Configure Nginx (on VPS):**
+    *   Add a new `location` block to your Nginx configuration (e.g., in `/etc/nginx/sites-available/default` or a dedicated config file like `link.arisegulf.com.conf`).
+    *   This configuration will serve the static files and handle client-side routing for the React app.
+    ```nginx
+    server {
+        listen 80;
+        server_name link.arisegulf.com; # Or your domain
+
+        # ... other existing configurations ...
+
+        location /arun_dashboard/ {
+            alias /var/www/html/arun_dashboard/; # Path where you uploaded the build files
+            index index.html index.htm;
+            try_files $uri $uri/ /arun_dashboard/index.html; # Essential for React Router
+        }
+
+        # ... other existing configurations ...
+    }
+    ```
+    *   After modifying Nginx config, reload Nginx: `sudo systemctl reload nginx`
+
+4.  **Access the Dashboard:**
+    *   The dashboard will be accessible at `http://link.arisegulf.com/arun_dashboard` (or your configured URL).
+
+#### Baserow Setup Summary (for context)
+
+*   **Professional Bill Entry:** Bills are entered in `Team Bills`, with detailed line items in `Bill Line Items`.
+*   **Verification:** `Bill Line Items` uses `Verified Qty` (from `Measurement Book` via `Lookup` field) and `Agreed Rate` (from `Master Rate Card`) to calculate `Payable Amount`.
+*   **Linking:** `Bill Line Items` are linked to `Team` records via `Related MB Site` (Link to table) and `MB Site No` (Lookup).
+*   **Payment Tracking:** Payments are recorded in `Payment System`.
+*   **Team Summary:** The `Team` table uses `Rollup` fields to aggregate `Total Billed Amount`, `Total Paid`, and `Remaining Balance` from `Bill Line Items` and `Payment System` tables.

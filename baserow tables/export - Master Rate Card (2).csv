@@ -1,10 +1,11 @@
 ﻿id,Rate ID,Vendor ,Rate,Work Category,Sub-Task
-1,,,30,Other,Splicing per core
+1,,,30,ODF,Splicing per core
 2,,,16,ODF,1st Cable for osp
 3,,,8,ODF,Common Cable osp
 4,,,2000,ODF,Pole installation
-5,,,450,Other,Pole extention (angle on pole)
+5,,,450,ODF,Pole extention (angle on pole)
 6,,,12,Cabling,Cabling Arial for Refilling
 7,,,250,Splicing,FAT splicing
-8,,,25,Other,"""Painting of NE (FAT, ODF AND FMS)"""
+8,,,25,ODF,"""Painting of NE (FAT, ODF AND FMS)"""
 9,,,10,Cabling,Cabling Arial for Cutover
+10,,,,,
