@@ -1,5 +1,5 @@
 include:
-#  - docker-compose.appsmith.yml
+  - docker-compose.appsmith.yml
   - docker-compose.n8n-mcp.yml
 
 services:
@@ -181,16 +181,16 @@ services:
       - app-network
 
   # 13. Metabase Service
-  metabase:
-    image: metabase/metabase:latest
-    container_name: metabase
-    restart: always
-    environment:
-      MB_DB_FILE: /metabase-data/metabase.db
-    volumes:
-      - metabase_data:/metabase-data
-    networks:
-      - app-network
+  # metabase:
+  #   image: metabase/metabase:latest
+  #   container_name: metabase
+  #   restart: always
+  #   environment:
+  #     MB_DB_FILE: /metabase-data/metabase.db
+  #   volumes:
+  #     - metabase_data:/metabase-data
+  #   networks:
+  #     - app-network
 
 networks:
   app-network:
