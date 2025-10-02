@@ -394,7 +394,7 @@ Your link will now show the correct, beautiful preview when shared.
 #### Deployment on VPS
 
 1.  **Build the React Application (Local PC):**
-    *   Navigate to the `arun-dashboard` project directory: `cd D:ps-stackrun-dashboard`
+    *   Navigate to the `arun-dashboard` project directory: `cd D:\vps-stack\arun-dashboard`
     *   Run the build command: `npm run build`
     *   This will create a `build` folder containing all optimized static files.
 
@@ -402,7 +402,7 @@ Your link will now show the correct, beautiful preview when shared.
     *   Transfer the **contents** of the local `build` folder to a directory on your VPS, e.g., `/var/www/html/arun_dashboard/`.
     *   You can use `scp` or `sftp` for this. Example `scp` command:
         ```bash
-        scp -r D:ps-stackrun-dashboarduild/* user@your_vps_ip:/var/www/html/arun_dashboard/
+        scp -r D:\vps-stack\arun-dashboard\build\* user@your_vps_ip:/var/www/html/arun_dashboard/
         ```
 
 3.  **Configure Nginx (on VPS):**
@@ -436,3 +436,229 @@ Your link will now show the correct, beautiful preview when shared.
 *   **Linking:** `Bill Line Items` are linked to `Team` records via `Related MB Site` (Link to table) and `MB Site No` (Lookup).
 *   **Payment Tracking:** Payments are recorded in `Payment System`.
 *   **Team Summary:** The `Team` table uses `Rollup` fields to aggregate `Total Billed Amount`, `Total Paid`, and `Remaining Balance` from `Bill Line Items` and `Payment System` tables.
+
+---
+
+## 7. Deploying React SPA Dashboards & Appsmith Setup
+
+This section documents the process of deploying a React Single Page Application (SPA) to a dedicated subdomain on your VPS, along with the setup of Appsmith.
+
+### 7.1. Deploying a React SPA to a Dedicated Subdomain (e.g., `arun.arisegulf.com`)
+
+**Goal:** To serve a React SPA from a dedicated subdomain with SSL, proper routing, and efficient caching.
+
+**Prerequisites:**
+*   React application built locally with `npm run build`. Ensure `homepage` in `package.json` is set to `"/"` for a dedicated subdomain.
+*   DNS `A` record created in Cloudflare for the subdomain (e.g., `arun.arisegulf.com` pointing to your VPS IP `193.203.161.27`), set to **"DNS only" (grey cloud)**.
+*   React build files (`build` folder content) copied to the VPS at `/var/www/html/arun_dashboard/`.
+    ```bash
+    scp -r D:/vps-stack/arun-dashboard/build/* root@193.203.161.27:/var/www/html/arun_dashboard/
+    ```
+
+**Key Learnings & Pitfalls:**
+*   **Network Connectivity (Port 80/443):** External reachability of ports 80 and 443 is crucial for Certbot and general website access. Even if Hostinger firewall shows ports open, deeper network blocks can occur. (Resolved by Hostinger support investigation).
+*   **Nginx `root` vs `alias`:** For a dedicated subdomain, `root` is generally cleaner. For subdirectories, `alias` can be used but requires careful `try_files` configuration.
+*   **`try_files` vs `error_page 404`:** For React SPAs, `try_files $uri $uri/ /index.html;` (or `$uri /index.html;` for root) is the canonical solution for client-side routing. `error_page 404` can lead to unexpected behavior.
+*   **React `homepage` Setting:** Must match the Nginx configuration. For a dedicated subdomain, `homepage: "/"` is correct.
+*   **Docker Volume Mounts:** Ensure the React build folder is correctly mounted into the Nginx container using an absolute path (e.g., `- /var/www/html/arun_dashboard:/var/www/html/arun_dashboard:ro`).
+*   **Certbot Challenge Handling:** The `location /.well-known/acme-challenge/` must be processed before any HTTP to HTTPS redirects in the Nginx configuration.
+
+**Detailed Deployment Steps:**
+
+1.  **Prepare React App (Local PC):**
+    *   Navigate to your React app directory: `cd D:\vps-stack\arun-dashboard`
+    *   Ensure `homepage` in `package.json` is set to `"/"`.
+        ```json
+        // package.json
+        {
+          "name": "arun-dashboard",
+          "version": "0.1.0",
+          "private": true,
+          "homepage": "/", // <--- Ensure this is set to "/"
+          // ...
+        }
+        ```
+    *   Build the application:
+        ```bash
+        npm run build
+        ```
+
+2.  **Transfer React Build to VPS:**
+    *   Copy the contents of your local `build` folder to the VPS:
+        ```bash
+        scp -r D:/vps-stack/arun-dashboard/build/* root@193.203.161.27:/var/www/html/arun_dashboard/
+        ```
+    *   Set correct permissions (run on VPS):
+        ```bash
+        sudo chown -R www-data:www-data /var/www/html/arun_dashboard
+        sudo find /var/www/html/arun_dashboard -type d -exec chmod 755 {} \;
+        sudo find /var/www/html/arun_dashboard -type f -exec chmod 644 {} \;
+        ```
+
+3.  **Update `docker-compose.yml` (Local PC):**
+    *   Ensure the `nginx-proxy` service has the correct volume mount for the React app:
+        ```yaml
+        # ... inside nginx-proxy service definition ...
+        volumes:
+          - ./nginx/conf.d:/etc/nginx/conf.d
+          - ./nginx/certs:/etc/letsencrypt
+          - /var/www/html/arun_dashboard:/var/www/html/arun_dashboard:ro  # <--- Crucial: Absolute path and read-only
+          # ... other volumes ...
+        # ...
+        ```
+
+4.  **Create/Update Nginx Configuration (`nginx/conf.d/arun.arisegulf.com.conf`) (Local PC):**
+    *   Create this file if it doesn't exist, or update its content with the following production-ready configuration:
+        ```nginx
+        server {
+            listen 80;
+            server_name arun.arisegulf.com;
+
+            # Certbot challenge MUST come before any redirects
+            location /.well-known/acme-challenge/ {
+                root /var/www/certbot;
+            }
+
+            # Redirect all other traffic to HTTPS
+            location / {
+                return 301 https://$host$request_uri;
+            }
+        }
+
+        server {
+            listen 443 ssl http2;
+            server_name arun.arisegulf.com;
+
+            ssl_certificate /etc/letsencrypt/live/arun.arisegulf.com/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/arun.arisegulf.com/privkey.pem;
+
+            root /var/www/html/arun_dashboard;
+            index index.html;
+
+            # SPA routing
+            location / {
+                try_files $uri $uri/ /index.html; # Canonical SPA routing
+            }
+
+            # No cache for index.html
+            location = /index.html {
+                add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+            }
+
+            # Cache static assets aggressively
+            location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {
+                expires 1y;
+                add_header Cache-Control "public, immutable" always;
+            }
+        }
+        ```
+
+5.  **Generate SSL Certificate (Run on VPS):**
+    *   Ensure Nginx is running with the above HTTP config.
+    *   Run Certbot:
+        ```bash
+        cd /root/my_project
+        docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d arun.arisegulf.com
+        ```
+    *   If prompted, choose option `2` to "Renew & replace".
+
+6.  **Deploy Changes & Restart Nginx (Run on VPS):**
+    *   Commit and push all local changes (package.json, docker-compose.yml, Nginx config files).
+        ```bash
+        git add .
+        git commit -m "feat: deploy arun.arisegulf.com dashboard"
+        git push
+        ```
+    *   Pull changes and restart Nginx:
+        ```bash
+        ssh root@193.203.161.27
+        cd /root/my_project
+        git pull
+        docker compose up -d --force-recreate nginx-proxy
+        ```
+
+7.  **Test the Dashboard:**
+    *   Access `https://arun.arisegulf.com/` in a new incognito browser window.
+
+### 7.2. Appsmith Setup
+
+**Goal:** To swap Metabase for Appsmith on the VPS.
+
+**Steps:**
+
+1.  **Modify `docker-compose.yml` (Local PC):**
+    *   Uncomment the `include` line for `docker-compose.appsmith.yml`:
+        ```yaml
+        include:
+          - docker-compose.appsmith.yml
+          - docker-compose.n8n-mcp.yml
+        ```
+    *   Comment out the entire `metabase` service definition.
+
+2.  **Create Nginx Configuration (`nginx/conf.d/appsmith.arisegulf.com.conf`) (Local PC):**
+    *   Create this file with the following content:
+        ```nginx
+        server {
+            listen 80;
+            server_name appsmith.arisegulf.com;
+
+            location /.well-known/acme-challenge/ {
+                root /var/www/certbot;
+            }
+
+            location / {
+                return 301 https://$host$request_uri;
+            }
+        }
+
+        server {
+            listen 443 ssl http2;
+            server_name appsmith.arisegulf.com;
+
+            ssl_certificate /etc/letsencrypt/live/appsmith.arisegulf.com/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/appsmith.arisegulf.com/privkey.pem;
+
+            location / {
+                proxy_pass http://appsmith:80;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+        }
+        ```
+
+3.  **Deploy Changes & Start Appsmith (Run on VPS):**
+    *   Commit and push all local changes.
+        ```bash
+        git add .
+        git commit -m "feat: swap metabase for appsmith"
+        git push
+        ```
+    *   Pull changes and start/recreate services:
+        ```bash
+        ssh root@193.203.161.27
+        cd /root/my_project
+        git pull
+        docker compose up -d --force-recreate nginx-proxy appsmith
+        ```
+
+4.  **Generate SSL Certificate for Appsmith (Run on VPS):**
+    ```bash
+    docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d appsmith.arisegulf.com
+    ```
+
+5.  **Restart Nginx (Run on VPS):**
+    ```bash
+    docker compose restart nginx-proxy
+    ```
+
+6.  **Access Appsmith:** `https://appsmith.arisegulf.com/`
+
+### 7.3. Pending Issues
+
+*   **WordPress Database Connection:** The `arisegulf.com` WordPress site is currently showing "Error establishing a database connection". This is likely due to missing or incorrect `ARISEGULF_DB_PASSWORD` in the `.env` file. This needs to be resolved to bring the main website back online.
