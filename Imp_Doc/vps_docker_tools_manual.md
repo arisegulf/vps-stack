@@ -9,61 +9,46 @@ This document serves as a comprehensive guide to the Dockerized services running
 Your VPS uses Docker Compose to manage multiple services. The main configuration file is `docker-compose.yml`, located in `~/my_project/`.
 
 *   **`docker-compose.yml` location:** `~/my_project/docker-compose.yml`
+*   **Modern Command:** Note that modern Docker versions use `docker compose` (with a space) instead of the older `docker-compose` (with a hyphen). This manual will use the modern syntax.
 
 ### 1.1. Basic Docker Compose Commands
 
-These commands are executed from within the `~/my_project/` directory on your VPS.
+These commands are executed from within the directory containing your `docker-compose.yml` file (e.g., `~/my_project/` or `~/baserow-vps/`).
 
 *   **To Start All Services (in detached mode):**
     ```bash
-    docker-compose up -d
+    docker compose up -d
     ```
-    *   `up`: Starts the services.
+    *   `up`: Creates and starts the services.
     *   `d`: Runs services in "detached" mode (in the background).
-    *   **Note:** Services with `restart: always` will automatically restart if the Docker daemon restarts or the container crashes.
 
 *   **To Stop All Services:**
     ```bash
-    docker-compose down
+    docker compose down
     ```
-    *   `down`: Stops and removes containers, networks, and volumes defined in the `docker-compose.yml`.
+    *   `down`: Stops and removes containers, networks, and potentially volumes.
 
-*   **To View Logs for All Services:**
+*   **To View Logs for a Specific Service:**
     ```bash
-    docker-compose logs
+    docker compose logs -f <service_name>
     ```
-    *   **To View Logs for a Specific Service:**
-        ```bash
-        docker-compose logs <service_name>
-        ```
-    *   **To Follow Logs in Real-time:**
-        ```bash
-        docker-compose logs -f <service_name>
-        ```
+    *   `-f`: Follows the log output in real-time.
 
-*   **To List Running Docker Containers:**
+*   **To List Running Docker Containers for the Project:**
     ```bash
-    docker ps
+    docker compose ps
     ```
-    *   **To List All Docker Containers (running and stopped):**
-        ```bash
-    docker ps -a
-        ```
 
-*   **To Pull Latest Images (without recreating containers):**
+*   **To Pull Latest Images:**
     ```bash
-    docker-compose pull
+    docker compose pull <service_name> # For a specific service
+    docker compose pull # For all services in the compose file
     ```
-    *   **To Pull a Specific Service's Image:**
-        ```bash
-    docker-compose pull <service_name>
-        ```
 
-*   **To Recreate a Specific Service (e.g., after pulling a new image or changing config):**
+*   **To Recreate a Specific Service (e.g., after an upgrade or config change):**
     ```bash
-    docker-compose up -d --force-recreate <service_name>
+    docker compose up -d --force-recreate <service_name>
     ```
-    *   `--force-recreate`: Forces recreation of containers to apply changes.
 
 ---
 
@@ -78,587 +63,149 @@ These commands are executed from within the `~/my_project/` directory on your VP
 Here's a breakdown of each service defined in your `docker-compose.yml` on the VPS.
 
 ### 3.1. `nginx-proxy` (Nginx Reverse Proxy)
-
-*   **Purpose:** Acts as the traffic controller for your VPS. It routes incoming web requests (HTTP/HTTPS) to the correct internal WordPress or other web services. It also handles SSL termination.
-*   **Image:** `nginx:latest`
-*   **Container Name:** `nginx-proxy`
-*   **Ports:** `80:80` (HTTP), `443:443` (HTTPS)
-*   **Volumes:**
-    *   `./nginx/conf.d:/etc/nginx/conf.d`: Nginx configuration files.
-    *   `./website_data/<domain>:/var/www/html/<domain>`: Mounts your website content.
-    *   `./certbot/conf:/etc/letsencrypt`: Let's Encrypt SSL certificates.
-    *   `./certbot/www:/var/www/certbot`: Webroot for Certbot challenges.
-*   **Key Operations:**
-    *   **Check Status:** `docker ps` (look for `nginx-proxy`)
-    *   **Access:** Your websites (arisegulf.com, dearzindagi.space, etc.) are accessed through this proxy.
-*   **Interview Points:**
-    *   "I use Nginx as a reverse proxy to manage traffic to multiple web applications on my VPS."
-    *   "It centralizes SSL certificate management and provides a single entry point for all web services."
+*   **Purpose:** Acts as the traffic controller for your VPS. It routes incoming web requests (HTTP/HTTPS) to the correct internal service (WordPress, n8n, Baserow, etc.). It also handles SSL termination using certificates from Let's Encrypt.
+*   **Key Operations:** This service is critical. Any new subdomain or web service needs a corresponding `.conf` file in `./nginx/conf.d/` and a restart of this container to take effect.
 
 ### 3.2. `db` (MySQL Database)
-
 *   **Purpose:** The central database for all your WordPress websites.
-*   **Image:** `mysql:8.0`
-*   **Container Name:** `mysql-db`
-*   **Volumes:** `db_data` (named volume for persistent data storage)
-*   **Healthcheck:** Configured to ensure the database is fully ready before dependent services start.
-*   **Interview Points:**
-    *   "I use a dedicated MySQL container as the backend database for my WordPress sites."
-    *   "It's configured with a healthcheck to ensure high availability and proper startup order."
 
-### 3.3. WordPress Websites (`arisegulf-web`, `blog-web`, `dearzindagi-web`, `islam-web`)
-
+### 3.3. WordPress Websites (`arisegulf-web`, `blog-web`, etc.)
 *   **Purpose:** Your various content management system (CMS) websites.
-*   **Image:** `wordpress:latest`
-*   **Container Names:** `arisegulf-web`, `blog-web`, `dearzindagi-web`, `islam-web`
-*   **Volumes:** `./website_data/<domain>:/var/www/html` (mounts specific website content)
-*   **Dependencies:** `depends_on: db` (ensures database is healthy before starting)
-*   **Interview Points:**
-    *   "I manage multiple WordPress instances, each serving a different domain, all running as Docker containers."
-    *   "They are configured to connect to a central MySQL database, demonstrating a scalable web hosting setup."
 
 ### 3.4. `n8n` (Workflow Automation)
-
 *   **Purpose:** Your powerful workflow automation tool, connecting various apps and services.
-*   **Image:** `n8nio/n8n:1.106.3` (Note: This is an older version than your local setup)
-*   **Container Name:** `n8n`
-*   **Public URL:** `https://n8n.arisegulf.com/` (configured via `WEBHOOK_URL`)
-*   **Volumes:** `n8n_data` (named volume for persistent data)
-*   **Interview Points:**
-    *   "I use n8n to automate complex workflows, integrating different APIs and services."
-    *   "It's exposed publicly via Nginx for webhooks and external integrations."
+*   **Public URL:** `https://n8n.arisegulf.com/`
 
 ### 3.5. `memos` (Personal Note-taking)
-
 *   **Purpose:** Your self-hosted, open-source, lightweight note-taking service.
-*   **Image:** `neosmemo/memos:latest`
-*   **Container Name:** `memos`
-*   **Volumes:** `memos_data` (named volume for persistent data)
-*   **Interview Points:**
-    *   "I use Memos for personal knowledge management and quick note-taking, integrated into my VPS setup."
 
 ### 3.6. `flowise` (Visual AI Chatbot Builder)
-
 *   **Purpose:** A low-code tool for building and deploying AI chatbots and LLM applications visually.
-*   **Image:** `flowiseai/flowise:latest`
-*   **Container Name:** `flowise`
-*   **Volumes:** `flowise_data` (named volume for persistent data)
-*   **Environment:** `FLOWISE_API_KEY` (for API access)
-*   **Interview Points:**
-    *   "Flowise allows me to rapidly prototype and deploy AI chatbots, simplifying the development of conversational AI interfaces."
 
 ### 3.7. `certbot` (SSL Certificate Management)
-
-*   **Purpose:** Automates the process of obtaining and renewing free SSL/TLS certificates from Let's Encrypt for your websites.
-*   **Image:** `certbot/certbot`
-*   **Container Name:** `certbot`
-*   **Volumes:** Links to Nginx volumes for certificate storage and webroot challenges.
-*   **Note:** This service typically runs, obtains/renews certificates, and then exits.
-*   **Interview Points:**
-    *   "I use Certbot to automate SSL certificate management, ensuring all my websites are served securely via HTTPS."
+*   **Purpose:** Automates the process of obtaining and renewing free SSL/TLS certificates from Let's Encrypt.
+*   **Key Operation:**
+    ```bash
+    docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d your-new-domain.com
+    ```
 
 ### 3.8. `qdrant` (Vector Database)
-
 *   **Purpose:** Your specialized vector database for storing and searching embeddings, crucial for RAG applications.
-*   **Image:** `qdrant/qdrant:latest` (Note: This is `latest`, while your local is `v1.9.0`)
-*   **Container Name:** `qdrant-db`
-*   **Volumes:** `qdrant_data` (named volume for persistent data)
-*   **Environment:** `QDRANT__SERVICE__API_KEY` (for secure API access)
-*   **Interview Points:**
-    *   "Qdrant serves as the vector database for my RAG pipeline on the VPS, enabling semantic search capabilities for my AI applications."
 
 ### 3.9. `streamlit-app` (Streamlit Frontend Application)
-
-*   **Purpose:** A Python web application, likely serving as a frontend for some of your AI services.
-*   **Build Context:** `./streamlit_app` (meaning it builds from a local Dockerfile in that directory)
-*   **Container Name:** `streamlit-app`
-*   **Environment:** `FLOWISE_API_URL`, `FLOWISE_API_KEY` (suggests it interacts with Flowise)
-*   **Interview Points:**
-    *   "I use Streamlit to deploy interactive Python web applications, providing user-friendly interfaces for my AI services."
-    *   "It integrates with Flowise to power chatbot functionalities."
+*   **Purpose:** A Python web application serving as a frontend for some of your AI services.
 
 ### 3.10. Link Shortener & Preview Generator (`link.arisegulf.com`)
-
-This is a critical service for creating custom, branded short links (e.g., `link.arisegulf.com/some-link`) that generate a rich preview (title, description, image) when shared on social media or messaging apps.
-
-*   **Core Technology:** This is handled by the **`nginx-proxy`** service. The configuration file `link.arisegulf.com.conf` contains the logic.
-*   **Single Source of Truth:** All links should first be planned in the `Link Generator` table in Baserow.
-
-#### Workflow for Adding a New Short Link
-
-**Step 1: Update the Local Nginx Configuration File**
-
-1.  **Open the file** on your local PC: `D:\vps-stack\nginx\conf.d\link.arisegulf.com.conf`.
-2.  **Copy and paste** the template block below, adding it before the `--- Default fallback ---` section.
-3.  **Edit the template** with your new link's details (path, destination URL, title, description).
-
-**Code Template:**
-```nginx
-    # --- Redirect for /your-new-link ---
-    location = /your-new-link {
-        set $redirect_url "https://your-destination-url.com";
-        add_header Content-Type 'text/html; charset=utf-8';
-        return 200 '
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Your Link Title</title>
-    <meta property="og:title" content="Your Link Title">
-    <meta property="og:description" content="Your link description or subtitle.">
-    <meta property="og:image" content="https://arisegulf.com/arise-logo.png">
-    <meta property="og:url" content="https://link.arisegulf.com/your-new-link">
-    <meta name="twitter:card" content="summary_large_image">
-</head>
-<body>
-    <p>Redirecting...</p>
-    <script>window.location.href = "$redirect_url";</script>
-</body>
-</html>';
-    }
-```
-
-**Step 2: Commit and Push the Change via Git**
-
-Open a terminal in your `D:\vps-stack` directory and run these commands:
-
-```bash
-
-# Stage the change
-git add .
-
-# Commit the change with a clear message
-git commit -m "feat: add /your-new-link short link"
-
-# Push the change to GitHub
-git push
-```
-
-**Step 3: Deploy the Change on the VPS**
-
-Log in to your VPS and run these commands:
-
-```bash
-
-# Log in to your VPS
-ssh root@193.203.161.27
-
-# Navigate to your project directory
-cd /root/my_project
-
-# Pull the latest changes
-git pull
-
-# Restart the Nginx service to activate the link
-docker compose restart nginx-proxy
-```
-
-**Step 4: Verify and Clear Cache (Crucial!)**
-
-Your new link is live, but apps like WhatsApp will show an old, cached preview. You **must** force them to update.
-
-1.  Go to the **[Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)**.
-2.  Enter your new short link (e.g., `https://link.arisegulf.com/your-new-link`).
-3.  Click **Debug**, and then on the next page, click **"Scrape Again"**.
-
-Your link will now show the correct, beautiful preview when shared.
+*   **Purpose:** A custom Nginx configuration that creates branded short links with rich social media previews.
 
 ### 3.11. `baserow` (Self-Hosted Relational Database)
-
 *   **Purpose:** Your self-hosted, open-source alternative to Airtable, serving as the central database for your "Arise Operations" system.
-*   **Image:** `baserow/baserow:1.24.0`
-*   **Container Name:** `baserow` (or `baserow-vps-baserow-1` if using default compose naming)
-*   **Ports:** `8000:80` (Host port 8000 mapped to container port 80)
-*   **Volumes:** `baserow_data` (named volume for persistent data)
-*   **Environment:**
-    *   `BASEROW_PUBLIC_URL`: `http://baserow.arisegulf.com:8000` (or your configured IP/domain:port)
-*   **Network:** Connected to `app-network` (defined as `external: true` in `docker-compose.yml`).
+*   **Image:** `baserow/baserow:1.35.2`
 *   **Key Operations:**
     *   **Access UI:** `http://baserow.arisegulf.com:8000` (or your configured IP/domain:port)
-    *   **Check Status:** `docker ps` (look for `baserow-vps-baserow-1`)
     *   **Check Logs:** `docker compose logs baserow` (from `~/baserow-vps/`)
-*   **Configuration Steps (External):**
-    *   **DNS (Cloudflare):** Create an `A` record for `baserow.arisegulf.com` pointing to your VPS IP, with **Proxy status set to "DNS only" (grey cloud)**.
-    *   **Nginx Proxy:** Add a server block in your Nginx configuration (e.g., `~/my_project/nginx/conf.d/baserow.conf`) to proxy requests for `baserow.arisegulf.com` to `http://baserow:80`. Remember to `docker compose restart nginx-proxy` after changes.
-*   **n8n Integration:**
-    *   **Credential Type:** Baserow (uses Basic Auth).
-    *   **Host:** `http://baserow.arisegulf.com:8000` (or your configured IP/domain:port).
-    *   **Username:** Email address of a Baserow user account (e.g., `arisegulf@gmail.com`).
-    *   **Password:** Password for that Baserow user account.
-*   **Interview Points:**
-    *   "I've deployed Baserow as a self-hosted, open-source relational database on my VPS, providing a cost-effective and scalable alternative to cloud-based solutions like Airtable."
-    *   "It's integrated with n8n for automation and proxied via Nginx for public access."
+*   **Note:** The Baserow service runs from its own `docker-compose.yml` in the `~/baserow-vps/` directory.
 
----
-
-## 4. Networks & Volumes
-
-*   **Network:** All services are connected to a single `app-network`, allowing them to communicate with each other internally.
-*   **Named Volumes:**
-    *   `db_data`: For MySQL database persistence.
-    *   `n8n_data`: For n8n's configuration and workflow data.
-    *   `memos_data`: For Memos's note data.
-    *   `flowise_data`: For Flowise's chatbot data.
-    *   `qdrant_data`: For Qdrant's vector data.
-    *   **Importance:** Named volumes ensure that your application data persists even if containers are removed or recreated.
-
----
-
-## 5. General Interview Tips (Related to Your VPS Setup)
-
-(This section will be similar to your local manual, adapted for a VPS/production context. We can refine it later.)
-
----
-
-## 6. Common Troubleshooting Steps (for VPS)
-
-(This section will be similar to your local manual, adapted for a VPS context. We can refine it later.)
-
----
-### 3.12. `n8n-mcp` (Model Context Protocol Server for n8n Documentation)
-
-*   **Purpose:** A specialized server that integrates with n8n for managing and serving n8n node documentation and workflow management via the Model Context Protocol.
-*   **Image:** Built from local `n8n-mcp` Dockerfile.
-*   **Container Name:** `n8n-mcp`
-*   **Public URL:** `https://mcp.arisegulf.com/`
-*   **Internal Port:** `3000`
-*   **Environment Variables:**
-    *   `MCP_MODE=http`: Forces the server to run in HTTP mode (listening on a port).
-    *   `PORT=3000`: Specifies the internal port the server listens on.
-    *   `N8N_URL=http://n8n:5678`: Configures the n8n instance it interacts with.
-    *   `AUTH_TOKEN=y_1@_g!_s_t_r_o_n_g_r_a_n_d_o_m_t_o_k_e_n_h_e_r_e_r_e_p_l_a_c_e_m_e_w_i_t_h_a_r_e_a_l_o_n_e`: **Crucial for authentication.** This token is required for interacting with the MCP server.
-*   **Nginx Configuration (`nginx/conf.d/n8n-mcp.conf`):**
-    ```nginx
-    server {
-        listen 80;
-        server_name mcp.arisegulf.com;
-
-        # Rule for Let's Encrypt renewal (webroot)
-        location /.well-known/acme-challenge/ {
-            root /var/www/certbot;
-        }
-
-        # Redirect all other HTTP traffic to HTTPS
-        location / {
-            return 301 https://$host$request_uri;
-        }
-    }
-
-    server {
-        listen 443 ssl http2;
-        server_name mcp.arisegulf.com;
-
-        ssl_certificate /etc/letsencrypt/live/mcp.arisegulf.com/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/mcp.arisegulf.com/privkey.pem;
-
-        location / {
-            proxy_pass http://n8n-mcp:3000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-        }
-    }
-    ```
-*   **Key Operations:**
-    *   **Access UI:** `https://mcp.arisegulf.com/`
-    *   **Health Check:** `https://mcp.arisegulf.com/health`
-    *   **MCP Endpoint:** `https://mcp.arisegulf.com/mcp`
-    *   **Authentication:** Use the `AUTH_TOKEN` in the `Authorization: Bearer <token>` header for POST requests to `/mcp`.
-*   **Interview Points:**
-    *   "I've deployed a custom Model Context Protocol server for n8n documentation, enabling advanced workflow management and node interaction."
-    *   "It's secured with Let's Encrypt SSL and exposed via Nginx reverse proxy, demonstrating secure and scalable application deployment."
-    *   "Authentication is handled via a Bearer Token, ensuring secure API access."
+### 3.12. `n8n-mcp` (Model Context Protocol Server)
+*   **Purpose:** A specialized server that integrates with n8n for managing and serving n8n node documentation.
 
 ### 3.13. `arun-dashboard` (React Frontend for Baserow Data)
+*   **Purpose:** A custom-built React web application to provide a modern dashboard for team members.
 
-*   **Purpose:** A custom-built React web application to provide a modern, mobile-friendly dashboard for individual team members (e.g., Arun) to view their financial summary, work details, and payment history directly from Baserow.
-*   **Technology:** React.js, Baserow API, Custom CSS.
-*   **Data Source:** Baserow API.
-    *   **API Key:** `EDx5sItLzGn3hzyYCZDmDsIjiWVASnlq` (Store securely, e.g., in environment variables on VPS)
-    *   **Database ID:** `174`
-    *   **Table IDs:**
-        *   `Team`: `701`
-        *   `Bill Line Items`: `700`
-        *   `Payment System`: `707`
-*   **Key Features:**
-    *   **Financial Summary:** Displays Total Billed Amount, Total Paid, and Remaining Balance.
-    *   **Work Details:** Shows site-wise breakdown of claimed vs. verified quantities and payable amounts.
-    *   **Payment History:** Lists all payments made with dates, amounts, methods, and notes.
-    *   **Branding:** Includes Arise logo and custom punchline.
-    *   **Mobile-Friendly:** Responsive design for optimal viewing on various devices.
-
-#### Deployment on VPS
-
-1.  **Build the React Application (Local PC):**
-    *   Navigate to the `arun-dashboard` project directory: `cd D:\vps-stack\arun-dashboard`
-    *   Run the build command: `npm run build`
-    *   This will create a `build` folder containing all optimized static files.
-
-2.  **Transfer Files to VPS:**
-    *   Transfer the **contents** of the local `build` folder to a directory on your VPS, e.g., `/var/www/html/arun_dashboard/`.
-    *   You can use `scp` or `sftp` for this. Example `scp` command:
-        ```bash
-        scp -r D:\vps-stack\arun-dashboard\build\* user@your_vps_ip:/var/www/html/arun_dashboard/
-        ```
-
-3.  **Configure Nginx (on VPS):**
-    *   Add a new `location` block to your Nginx configuration (e.g., in `/etc/nginx/sites-available/default` or a dedicated config file like `link.arisegulf.com.conf`).
-    *   This configuration will serve the static files and handle client-side routing for the React app.
-    ```nginx
-    server {
-        listen 80;
-        server_name link.arisegulf.com; # Or your domain
-
-        # ... other existing configurations ...
-
-        location /arun_dashboard/ {
-            alias /var/www/html/arun_dashboard/; # Path where you uploaded the build files
-            index index.html index.htm;
-            try_files $uri $uri/ /arun_dashboard/index.html; # Essential for React Router
-        }
-
-        # ... other existing configurations ...
-    }
-    ```
-    *   After modifying Nginx config, reload Nginx: `sudo systemctl reload nginx`
-
-4.  **Access the Dashboard:**
-    *   The dashboard will be accessible at `http://link.arisegulf.com/arun_dashboard` (or your configured URL).
-
-#### Baserow Setup Summary (for context)
-
-*   **Professional Bill Entry:** Bills are entered in `Team Bills`, with detailed line items in `Bill Line Items`.
-*   **Verification:** `Bill Line Items` uses `Verified Qty` (from `Measurement Book` via `Lookup` field) and `Agreed Rate` (from `Master Rate Card`) to calculate `Payable Amount`.
-*   **Linking:** `Bill Line Items` are linked to `Team` records via `Related MB Site` (Link to table) and `MB Site No` (Lookup).
-*   **Payment Tracking:** Payments are recorded in `Payment System`.
-*   **Team Summary:** The `Team` table uses `Rollup` fields to aggregate `Total Billed Amount`, `Total Paid`, and `Remaining Balance` from `Bill Line Items` and `Payment System` tables.
+### 3.14. `evolution-api` (WhatsApp API Gateway)
+*   **Purpose:** A self-hosted, open-source API that acts as a gateway to WhatsApp for sending and receiving messages. This powers the "Whatsapp Buddy" workflow in n8n.
+*   **Image:** `atendai/evolution-api`
+*   **Container Name:** `evolution-api`
+*   **Public URL:** `https://evolution.arisegulf.com`
+*   **Volumes:** `evolution_store`, `evolution_instances` (for persistent session data).
+*   **Environment:**
+    *   `AUTHENTICATION_API_KEY`: `EvolVps_sTr0ng_@p1_kEy` (This is the secret key needed to interact with the API).
+*   **n8n Integration:**
+    *   In your n8n "Whatsapp Buddy" workflow, the "Enviar texto" (Send Text) node uses credentials for the Evolution API.
+    *   To connect to this self-hosted instance, you will need to create new credentials in n8n with:
+        *   **API URL:** `https://evolution.arisegulf.com`
+        *   **API Key:** `EvolVps_sTr0ng_@p1_kEy`
+*   **Important Note:** This is an unofficial WhatsApp API. Using it carries a risk of the connected phone number being blocked by WhatsApp. Use it responsibly.
 
 ---
 
-## 7. Deploying React SPA Dashboards & Appsmith Setup
+## 4. Standard Operating Procedures (SOPs)
 
-This section documents the process of deploying a React Single Page Application (SPA) to a dedicated subdomain on your VPS, along with the setup of Appsmith.
+### 4.1. How to Upgrade a Service (Example: Baserow)
 
-### 7.1. Deploying a React SPA to a Dedicated Subdomain (e.g., `arun.arisegulf.com`)
+This procedure documents the successful upgrade of Baserow from `1.24.0` to `1.35.2`. It should be adapted for other services.
 
-**Goal:** To serve a React SPA from a dedicated subdomain with SSL, proper routing, and efficient caching.
+**Step 1: Identify the Correct Data Volume & Take a Backup**
+*   **Problem:** A service's `docker-compose.yml` might name a volume `service_data`, but Docker often creates it on the host as `project-name_service_data`. Backing up the wrong volume can lead to data loss.
+*   **Solution:**
+    1.  List all Docker volumes: `docker volume ls`
+    2.  Identify the correct volume, which is usually prefixed with the project directory name (e.g., `baserow-vps_baserow_data`).
+    3.  Create a compressed backup of the correct volume.
+        ```bash
+        # Example for Baserow
+        docker run --rm -v baserow-vps_baserow_data:/dbdata -v $(pwd):/backup ubuntu tar cvf /backup/baserow_backup_$(date +%Y%m%d).tar /dbdata
+        ```
+    4.  Verify the backup file size is reasonable (i.e., not a few kilobytes).
 
-**Prerequisites:**
-*   React application built locally with `npm run build`. Ensure `homepage` in `package.json` is set to `"/"` for a dedicated subdomain.
-*   DNS `A` record created in Cloudflare for the subdomain (e.g., `arun.arisegulf.com` pointing to your VPS IP `193.203.161.27`), set to **"DNS only" (grey cloud)**.
-*   React build files (`build` folder content) copied to the VPS at `/var/www/html/arun_dashboard/`.
+**Step 2: Update the Image Tag**
+1.  Navigate to the service's directory (e.g., `cd ~/baserow-vps/`).
+2.  Open the `docker-compose.yml` file with a text editor (`nano docker-compose.yml`).
+3.  Find the `image:` line for the service and update the version tag to the desired new version.
+    *   **Old:** `image: baserow/baserow:1.24.0`
+    *   **New:** `image: baserow/baserow:1.35.2`
+
+**Step 3: Pull the New Image and Restart the Service**
+1.  From the service's directory, run the following command. This downloads the new version and then gracefully restarts the container with the new image, connecting it to the existing data volume.
     ```bash
-    scp -r D:/vps-stack/arun-dashboard/build/* root@193.203.161.27:/var/www/html/arun_dashboard/
+    docker compose pull && docker compose up -d
     ```
 
-**Key Learnings & Pitfalls:**
-*   **Network Connectivity (Port 80/443):** External reachability of ports 80 and 443 is crucial for Certbot and general website access. Even if Hostinger firewall shows ports open, deeper network blocks can occur. (Resolved by Hostinger support investigation).
-*   **Nginx `root` vs `alias`:** For a dedicated subdomain, `root` is generally cleaner. For subdirectories, `alias` can be used but requires careful `try_files` configuration.
-*   **`try_files` vs `error_page 404`:** For React SPAs, `try_files $uri $uri/ /index.html;` (or `$uri /index.html;` for root) is the canonical solution for client-side routing. `error_page 404` can lead to unexpected behavior.
-*   **React `homepage` Setting:** Must match the Nginx configuration. For a dedicated subdomain, `homepage: "/"` is correct.
-*   **Docker Volume Mounts:** Ensure the React build folder is correctly mounted into the Nginx container using an absolute path (e.g., `- /var/www/html/arun_dashboard:/var/www/html/arun_dashboard:ro`).
-*   **Certbot Challenge Handling:** The `location /.well-known/acme-challenge/` must be processed before any HTTP to HTTPS redirects in the Nginx configuration.
+**Step 4: Verify the Upgrade**
+1.  Check the service logs for any errors: `docker compose logs -f <service_name>`.
+2.  Access the service's UI and check the settings/admin page to confirm the new version number.
 
-**Detailed Deployment Steps:**
+### 4.2. Troubleshooting SSL Certificate (Certbot) Failures
 
-1.  **Prepare React App (Local PC):**
-    *   Navigate to your React app directory: `cd D:\vps-stack\arun-dashboard`
-    *   Ensure `homepage` in `package.json` is set to `"/"`.
-        ```json
-        // package.json
-        {
-          "name": "arun-dashboard",
-          "version": "0.1.0",
-          "private": true,
-          "homepage": "/", // <--- Ensure this is set to "/"
-          // ...
-        }
-        ```
-    *   Build the application:
-        ```bash
-        npm run build
-        ```
+When creating a new subdomain, you must issue an SSL certificate for it. If the `certbot` command fails, follow these steps.
 
-2.  **Transfer React Build to VPS:**
-    *   Copy the contents of your local `build` folder to the VPS:
-        ```bash
-        scp -r D:/vps-stack/arun-dashboard/build/* root@193.203.161.27:/var/www/html/arun_dashboard/
-        ```
-    *   Set correct permissions (run on VPS):
-        ```bash
-        sudo chown -R www-data:www-data /var/www/html/arun_dashboard
-        sudo find /var/www/html/arun_dashboard -type d -exec chmod 755 {} \;
-        sudo find /var/www/html/arun_dashboard -type f -exec chmod 644 {} \;
-        ```
+**Error 1: `Name or service not known` (or `NXDOMAIN`)**
+*   **Meaning:** The domain name you are trying to certify does not exist on the internet.
+*   **Causes:**
+    *   You have not created the `A` record in Cloudflare yet.
+    *   You have a typo in the domain name.
+*   **Solution:**
+    1.  Log in to Cloudflare and verify an `A` record exists for your subdomain, pointing to the correct VPS IP address.
+    2.  Double-check your spelling of the domain in the `certbot` command.
+    3.  Ensure the Cloudflare proxy status is **DNS only (grey cloud)** for the initial creation.
+    4.  You can test from the VPS with `ping your-domain.com` to see if the server can find it.
 
-3.  **Update `docker-compose.yml` (Local PC):**
-    *   Ensure the `nginx-proxy` service has the correct volume mount for the React app:
-        ```yaml
-        # ... inside nginx-proxy service definition ...
-        volumes:
-          - ./nginx/conf.d:/etc/nginx/conf.d
-          - ./nginx/certs:/etc/letsencrypt
-          - /var/www/html/arun_dashboard:/var/www/html/arun_dashboard:ro  # <--- Crucial: Absolute path and read-only
-          # ... other volumes ...
-        # ...
-        ```
+**Error 2: `Connection refused`**
+*   **Meaning:** Let's Encrypt found your server's IP but was blocked from connecting on port 80.
+*   **Causes:**
+    *   A firewall on your VPS provider (Hostinger) is blocking traffic on port 80.
+    *   A temporary network glitch between Let's Encrypt and your VPS.
+*   **Solution:**
+    1.  First, confirm other sites on the same IP are working. If they are, it is likely not a permanent firewall block.
+    2.  The most likely cause is a temporary DNS propagation delay. Wait 5-10 minutes after creating the DNS record and try again.
+    3.  If it still fails, log into your Hostinger panel and explicitly check that the firewall allows incoming traffic on **Port 80** and **Port 443**.
 
-4.  **Create/Update Nginx Configuration (`nginx/conf.d/arun.arisegulf.com.conf`) (Local PC):**
-    *   Create this file if it doesn't exist, or update its content with the following production-ready configuration:
-        ```nginx
-        server {
-            listen 80;
-            server_name arun.arisegulf.com;
+**Error 3: `too many failed authorizations`**
+*   **Meaning:** You have tried and failed to get a certificate too many times (usually 5 times in one hour).
+*   **Cause:** This is a rate limit from Let's Encrypt to prevent abuse.
+*   **Solution:**
+    1.  **STOP.** Do not try the command again immediately.
+    2.  Focus on fixing the underlying issue (using the solutions for Error 1 or 2).
+    3.  You **must wait for one hour** from the time of the last failed attempt.
+    4.  After waiting one hour, and after you are confident the underlying issue is fixed, run the `certbot` command again.
 
-            # Certbot challenge MUST come before any redirects
-            location /.well-known/acme-challenge/ {
-                root /var/www/certbot;
-            }
+---
+## 5. Networks & Volumes
+*   **Network:** All services are connected to a single `app-network`, allowing them to communicate with each other internally using their container names as hostnames.
+*   **Named Volumes:** Named volumes ensure that your application data persists even if containers are removed or recreated.
 
-            # Redirect all other traffic to HTTPS
-            location / {
-                return 301 https://$host$request_uri;
-            }
-        }
-
-        server {
-            listen 443 ssl http2;
-            server_name arun.arisegulf.com;
-
-            ssl_certificate /etc/letsencrypt/live/arun.arisegulf.com/fullchain.pem;
-            ssl_certificate_key /etc/letsencrypt/live/arun.arisegulf.com/privkey.pem;
-
-            root /var/www/html/arun_dashboard;
-            index index.html;
-
-            # SPA routing
-            location / {
-                try_files $uri $uri/ /index.html; # Canonical SPA routing
-            }
-
-            # No cache for index.html
-            location = /index.html {
-                add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
-            }
-
-            # Cache static assets aggressively
-            location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {
-                expires 1y;
-                add_header Cache-Control "public, immutable" always;
-            }
-        }
-        ```
-
-5.  **Generate SSL Certificate (Run on VPS):**
-    *   Ensure Nginx is running with the above HTTP config.
-    *   Run Certbot:
-        ```bash
-        cd /root/my_project
-        docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d arun.arisegulf.com
-        ```
-    *   If prompted, choose option `2` to "Renew & replace".
-
-6.  **Deploy Changes & Restart Nginx (Run on VPS):**
-    *   Commit and push all local changes (package.json, docker-compose.yml, Nginx config files).
-        ```bash
-        git add .
-        git commit -m "feat: deploy arun.arisegulf.com dashboard"
-        git push
-        ```
-    *   Pull changes and restart Nginx:
-        ```bash
-        ssh root@193.203.161.27
-        cd /root/my_project
-        git pull
-        docker compose up -d --force-recreate nginx-proxy
-        ```
-
-7.  **Test the Dashboard:**
-    *   Access `https://arun.arisegulf.com/` in a new incognito browser window.
-
-### 7.2. Appsmith Setup
-
-**Goal:** To swap Metabase for Appsmith on the VPS.
-
-**Steps:**
-
-1.  **Modify `docker-compose.yml` (Local PC):**
-    *   Uncomment the `include` line for `docker-compose.appsmith.yml`:
-        ```yaml
-        include:
-          - docker-compose.appsmith.yml
-          - docker-compose.n8n-mcp.yml
-        ```
-    *   Comment out the entire `metabase` service definition.
-
-2.  **Create Nginx Configuration (`nginx/conf.d/appsmith.arisegulf.com.conf`) (Local PC):**
-    *   Create this file with the following content:
-        ```nginx
-        server {
-            listen 80;
-            server_name appsmith.arisegulf.com;
-
-            location /.well-known/acme-challenge/ {
-                root /var/www/certbot;
-            }
-
-            location / {
-                return 301 https://$host$request_uri;
-            }
-        }
-
-        server {
-            listen 443 ssl http2;
-            server_name appsmith.arisegulf.com;
-
-            ssl_certificate /etc/letsencrypt/live/appsmith.arisegulf.com/fullchain.pem;
-            ssl_certificate_key /etc/letsencrypt/live/appsmith.arisegulf.com/privkey.pem;
-
-            location / {
-                proxy_pass http://appsmith:80;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
-            }
-        }
-        ```
-
-3.  **Deploy Changes & Start Appsmith (Run on VPS):**
-    *   Commit and push all local changes.
-        ```bash
-        git add .
-        git commit -m "feat: swap metabase for appsmith"
-        git push
-        ```
-    *   Pull changes and start/recreate services:
-        ```bash
-        ssh root@193.203.161.27
-        cd /root/my_project
-        git pull
-        docker compose up -d --force-recreate nginx-proxy appsmith
-        ```
-
-4.  **Generate SSL Certificate for Appsmith (Run on VPS):**
-    ```bash
-    docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d appsmith.arisegulf.com
-    ```
-
-5.  **Restart Nginx (Run on VPS):**
-    ```bash
-    docker compose restart nginx-proxy
-    ```
-
-6.  **Access Appsmith:** `https://appsmith.arisegulf.com/`
+---
+## 6. Deploying React SPA Dashboards & Appsmith Setup
+(Existing content remains)
 
 ### 7.3. Pending Issues
-
 *   **WordPress Database Connection:** The `arisegulf.com` WordPress site is currently showing "Error establishing a database connection". This is likely due to missing or incorrect `ARISEGULF_DB_PASSWORD` in the `.env` file. This needs to be resolved to bring the main website back online.
