@@ -115,17 +115,28 @@ Here's a breakdown of each service defined in your `docker-compose.yml` on the V
 ### 3.14. `evolution-api` (WhatsApp API Gateway)
 *   **Purpose:** A self-hosted, open-source API that acts as a gateway to WhatsApp for sending and receiving messages. This powers the "Whatsapp Buddy" workflow in n8n.
 *   **Image:** `atendai/evolution-api`
-*   **Container Name:** `evolution-api`
+*   **Database:** Requires a **PostgreSQL** database. It does **not** support MongoDB.
 *   **Public URL:** `https://evolution.arisegulf.com`
-*   **Volumes:** `evolution_store`, `evolution_instances` (for persistent session data).
-*   **Environment:**
-    *   `AUTHENTICATION_API_KEY`: `EvolVps_sTr0ng_@p1_kEy` (This is the secret key needed to interact with the API).
+*   **Manager UI:** `https://evolution.arisegulf.com/manager`
+*   **Configuration:** Managed via an `evolution.env` file in the project root.
+    ```bash
+    # evolution.env
+    DATABASE_ENABLED=true
+    DATABASE_PROVIDER=postgresql
+    DATABASE_CONNECTION_URI=postgresql://evolution_user:your_secure_password_here@postgres:5432/evolution_db?schema=public
+
+    AUTHENTICATION_API_KEY=EvolVps_sTr0ng_@p1_kEy
+    ```
 *   **n8n Integration:**
-    *   In your n8n "Whatsapp Buddy" workflow, the "Enviar texto" (Send Text) node uses credentials for the Evolution API.
-    *   To connect to this self-hosted instance, you will need to create new credentials in n8n with:
+    *   Create new credentials in n8n with:
         *   **API URL:** `https://evolution.arisegulf.com`
         *   **API Key:** `EvolVps_sTr0ng_@p1_kEy`
 *   **Important Note:** This is an unofficial WhatsApp API. Using it carries a risk of the connected phone number being blocked by WhatsApp. Use it responsibly.
+
+### 3.15. `postgres` (PostgreSQL Database for Evolution API)
+*   **Purpose:** A dedicated PostgreSQL database instance required by the `evolution-api` service.
+*   **Image:** `postgres:15`
+*   **Volumes:** `postgres_data` (for persistent database storage).
 
 ---
 
@@ -197,6 +208,11 @@ When creating a new subdomain, you must issue an SSL certificate for it. If the 
     2.  Focus on fixing the underlying issue (using the solutions for Error 1 or 2).
     3.  You **must wait for one hour** from the time of the last failed attempt.
     4.  After waiting one hour, and after you are confident the underlying issue is fixed, run the `certbot` command again.
+
+**Error 4: `Database provider mongodb invalid`**
+*   **Meaning:** The application is configured to use a database that it does not support.
+*   **Root Cause:** The current version of Evolution API (v2+) does **not** support MongoDB. It requires PostgreSQL or MySQL.
+*   **Solution:** Do not use MongoDB. You must configure the service to use a PostgreSQL database. Refer to the service documentation for the correct `docker-compose.yml` and environment variable setup.
 
 ---
 ## 5. Networks & Volumes
