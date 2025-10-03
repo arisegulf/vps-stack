@@ -181,18 +181,29 @@ services:
     networks:
       - app-network
 
-  # 13. Evolution API (WhatsApp)
+  # 13. Evolution API Database (MongoDB)
+  mongo:
+    image: mongo:5.0
+    container_name: mongo
+    restart: always
+    volumes:
+      - evolution_db_data:/data/db
+    networks:
+      - app-network
+
+  # 14. Evolution API (WhatsApp)
   evolution-api:
     image: atendai/evolution-api
     container_name: evolution-api
     restart: always
     environment:
+      - DATABASE_PROVIDER=mongodb
+      - DATABASE_URL=mongodb://mongo:27017/evolution_api
       - AUTHENTICATION_API_KEY=EvolVps_sTr0ng_@p1_kEy
-    volumes:
-      - evolution_store:/evolution/store
-      - evolution_instances:/evolution/instances
     networks:
       - app-network
+    depends_on:
+      - mongo
 
   # 14. Metabase Service
   # metabase:
@@ -219,3 +230,4 @@ volumes:
   metabase_data:
   evolution_store:
   evolution_instances:
+  evolution_db_data:
