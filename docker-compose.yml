@@ -193,7 +193,7 @@ services:
 
   # 14. Evolution API (WhatsApp)
   evolution-api:
-    image: evolution-api/evolution-api
+    image: atendai/evolution-api
     container_name: evolution-api
     restart: always
     env_file:
