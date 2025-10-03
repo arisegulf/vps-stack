@@ -113,7 +113,7 @@ services:
 
   # 7. n8n Service
   n8n:
-    image: n8nio/n8n:1.109.2 # Pinning to a specific, stable version
+    image: n8nio/n8n:1.113.3 # Pinning to a specific, stable version
     container_name: n8n
     restart: always
     environment:
