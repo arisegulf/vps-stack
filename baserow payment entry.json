@@ -1,0 +1,128 @@
+{
+  "name": "baserow payment entry",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-request",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        -432
+      ],
+      "id": "ed9cae61-750a-4007-b24b-6cf15fe76efe",
+      "name": "Webhook",
+      "webhookId": "2a608719-3653-4209-9c00-b16ce0305bc3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6592d472-4908-482f-9663-86e44ecab093",
+              "name": "Team",
+              "value": "={{ $json.body.items[0].Team[0].value }}",
+              "type": "string"
+            },
+            {
+              "id": "b6d26201-1bab-4e51-a7d9-9b4339d75ba2",
+              "name": "Payment Date",
+              "value": "={{ $json.body.items[0]['Payment Date'] }}",
+              "type": "string"
+            },
+            {
+              "id": "cf7a65c9-d380-49cd-bbd2-5ab367a72a70",
+              "name": "Amount Require",
+              "value": "={{ $json.body.items[0]['Amount Require'] }}",
+              "type": "string"
+            },
+            {
+              "id": "2df01415-6b6b-456d-b0cb-ad8625f99dc5",
+              "name": "Notes",
+              "value": "={{ $json.body.items[0].Notes }}",
+              "type": "string"
+            },
+            {
+              "id": "86a40703-dea8-433c-96fe-083fcb7f9dcf",
+              "name": "Attachments",
+              "value": "={{ $json.body.items[0].Attachments }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        -432
+      ],
+      "id": "75e7e01d-07b5-4b0e-afc1-81715c22d204",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "1046074180",
+        "text": "=New Payment Request\n\n  Team: {{ $json.Team }}\n  Date: {{ $json[\"Payment Date\"] }}\n  Amount: {{ $json[\"Amount Require\"] }}\n  Notes: {{ $json.Notes }}\n  Attachments: {{ $json.Attachments }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        -432
+      ],
+      "id": "0b68b98f-3eb0-4edb-a4f0-6696bb19c085",
+      "name": "Send a text message",
+      "webhookId": "ddad6cb6-685e-49a9-9528-38af39cd9697",
+      "credentials": {
+        "telegramApi": {
+          "id": "1vu6Cc5uRLb63tE8",
+          "name": "Telegram account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3445b9ad-e0b6-4370-ad21-5f76f44e3c29",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "83a4d6bc174da693a61ca01de3002bd6edb648df9f1b87ed5d7952dbaec76899"
+  },
+  "id": "KH2t0W5vLwZ34uh0",
+  "tags": []
+}

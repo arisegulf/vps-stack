@@ -181,7 +181,20 @@ services:
     networks:
       - app-network
 
-  # 13. Metabase Service
+  # 13. Evolution API (WhatsApp)
+  evolution-api:
+    image: atendai/evolution-api
+    container_name: evolution-api
+    restart: always
+    environment:
+      - AUTHENTICATION_API_KEY=EvolVps_sTr0ng_@p1_kEy
+    volumes:
+      - evolution_store:/evolution/store
+      - evolution_instances:/evolution/instances
+    networks:
+      - app-network
+
+  # 14. Metabase Service
   # metabase:
   #   image: metabase/metabase:latest
   #   container_name: metabase
@@ -204,3 +217,5 @@ volumes:
   flowise_data:
   qdrant_data:
   metabase_data:
+  evolution_store:
+  evolution_instances:
