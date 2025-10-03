@@ -199,6 +199,8 @@ services:
     environment:
       - DATABASE_PROVIDER=mongodb
       - DATABASE_URL=mongodb://mongo:27017/evolution_api
+      - TYPE_SERVER=local
+      - TYPE_API=local
       - AUTHENTICATION_API_KEY=EvolVps_sTr0ng_@p1_kEy
     networks:
       - app-network
