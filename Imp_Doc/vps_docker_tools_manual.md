@@ -214,6 +214,36 @@ When creating a new subdomain, you must issue an SSL certificate for it. If the 
 *   **Root Cause:** The current version of Evolution API (v2+) does **not** support MongoDB. It requires PostgreSQL or MySQL.
 *   **Solution:** Do not use MongoDB. You must configure the service to use a PostgreSQL database. Refer to the service documentation for the correct `docker-compose.yml` and environment variable setup.
 
+### 4.3. Troubleshooting Evolution API (WhatsApp API Gateway)
+
+**Problem:** Initial setup and subsequent instance recreation of the `evolution-api` service led to persistent `ERROR [Redis] redis disconnected` messages in the `evolution-api` logs, `502 Bad Gateway` errors from Nginx, and the inability to generate QR codes in the Evolution Manager UI.
+
+**Root Causes Identified & Solutions Implemented:**
+
+1.  **Incorrect Redis Environment Variables:**
+    *   **Issue:** The `evolution-api` v2 expects `CACHE_REDIS_ENABLED` and `CACHE_REDIS_URI` for Redis caching, not `REDIS_ENABLED`, `REDIS_HOST`, or `REDIS_PORT`.
+    *   **Solution:** Updated `docker-compose.yml` to use `CACHE_REDIS_ENABLED=true` and `CACHE_REDIS_URI=redis://evolution-redis:6379/0` in the `evolution-api` service's environment block. Removed redundant Redis variables.
+
+2.  **Redis RDB Format Version Mismatch:**
+    *   **Issue:** Switching from `redis:latest` (likely Redis 7.x) to `redis:6-alpine` (Redis 6.x) caused the older Redis version to fail loading an RDB file created by the newer version, leading to continuous Redis container restarts (`Can't handle RDB format version 12`).
+    *   **Solution:** Performed a complete cleanup of the `redis_data` volume (`docker volume rm my_project_redis_data`) to ensure a fresh start for the `redis:6-alpine` container.
+
+3.  **Nginx Hostname Resolution Failure:**
+    *   **Issue:** Nginx was unable to resolve the hostname `arisegulf-web` (and potentially other service names) within the Docker network, leading to `nginx: [emerg] host not found in upstream "arisegulf-web"` errors and preventing Nginx from starting correctly. This indirectly caused `502 Bad Gateway` for `evolution.arisegulf.com`.
+    *   **Solution:** Added `resolver 127.0.0.11 valid=30s;` to the `server` block in `/etc/nginx/conf.d/arisegulf.com.conf` to explicitly configure Nginx to use Docker's internal DNS resolver.
+
+4.  **Evolution API Healthcheck Failure:**
+    *   **Issue:** The initial healthcheck for `evolution-api` used `curl`, which was not installed in the container, causing the healthcheck to fail and the container to be marked `unhealthy`.
+    *   **Solution:** Changed the `healthcheck` command in `docker-compose.yml` for `evolution-api` to use `nc -z localhost 8080`, which checks if the port is open and is typically available in minimal container images.
+
+**Outcome:** The `evolution-api` service is now running stably, connected to both PostgreSQL and Redis, and is accessible via Nginx at `https://evolution.arisegulf.com/manager`. QR code generation and WhatsApp connectivity are fully functional.
+
+**Key Learnings:**
+*   Always verify application-specific environment variable names (e.g., `CACHE_REDIS_URI` vs. `REDIS_URI`).
+*   Be mindful of data volume compatibility when downgrading database/cache versions.
+*   Explicitly configure Nginx resolvers for Docker internal DNS to prevent hostname resolution issues.
+*   Ensure healthcheck commands use tools available within the container image.
+
 ---
 ## 5. Networks & Volumes
 *   **Network:** All services are connected to a single `app-network`, allowing them to communicate with each other internally using their container names as hostnames.
