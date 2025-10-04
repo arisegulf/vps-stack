@@ -189,7 +189,7 @@ services:
     environment:
       POSTGRES_DB: evolution_db
       POSTGRES_USER: evolution_user
-      POSTGRES_PASSWORD: your_secure_password_here
+      POSTGRES_PASSWORD: g3m1n1_s3cur3_p@ssw0rd
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -215,6 +215,7 @@ services:
     environment:
       - REDIS_URI=redis://evolution-redis:6379/0
       - REDIS_ENABLED=true
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1025062854
     volumes:
       - evolution_store:/evolution/store
       - evolution_instances:/evolution/instances
