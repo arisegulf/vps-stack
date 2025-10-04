@@ -195,6 +195,16 @@ services:
     networks:
       - app-network
 
+  # Redis Service for Evolution API
+  redis:
+    image: redis:latest
+    container_name: evolution-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
   # 14. Evolution API (WhatsApp)
   evolution-api:
     image: atendai/evolution-api
@@ -202,6 +212,9 @@ services:
     restart: always
     env_file:
       - ./evolution.env
+    environment:
+      - REDIS_URI=redis://evolution-redis:6379/0
+      - REDIS_ENABLED=true
     volumes:
       - evolution_store:/evolution/store
       - evolution_instances:/evolution/instances
@@ -209,6 +222,7 @@ services:
       - app-network
     depends_on:
       - postgres
+      - redis
 
   # 14. Metabase Service
   # metabase:
@@ -237,3 +251,4 @@ volumes:
   evolution_instances:
   evolution_db_data:
   postgres_data:
+  redis_data:
