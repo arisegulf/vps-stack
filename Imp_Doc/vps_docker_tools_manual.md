@@ -60,45 +60,37 @@ These commands are executed from within the directory containing your `docker-co
 
 ## 3. Detailed Service Documentation: Your VPS Services
 
-Here's a breakdown of each service defined in your `docker-compose.yml` on the VPS.
+Here's a breakdown of the core services currently running on the VPS.
 
 ### 3.1. `nginx-proxy` (Nginx Reverse Proxy)
-*   **Purpose:** Acts as the traffic controller for your VPS. It routes incoming web requests (HTTP/HTTPS) to the correct internal service (WordPress, n8n, Baserow, etc.). It also handles SSL termination using certificates from Let's Encrypt.
+*   **Purpose:** Acts as the traffic controller for your VPS. It routes incoming web requests (HTTP/HTTPS) to the correct internal service (n8n, Baserow, etc.). It also handles SSL termination using certificates from Let's Encrypt.
 *   **Key Operations:** This service is critical. Any new subdomain or web service needs a corresponding `.conf` file in `./nginx/conf.d/` and a restart of this container to take effect.
 
-### 3.2. `db` (MySQL Database)
-*   **Purpose:** The central database for all your WordPress websites.
-
-### 3.3. WordPress Websites (`arisegulf-web`, `blog-web`, etc.)
-*   **Purpose:** Your various content management system (CMS) websites.
-
-### 3.4. `n8n` (Workflow Automation)
+### 3.2. `n8n` (Workflow Automation)
 *   **Purpose:** Your powerful workflow automation tool, connecting various apps and services.
 *   **Public URL:** `https://n8n.arisegulf.com/`
 
-### 3.5. `memos` (Personal Note-taking)
+### 3.3. `memos` (Personal Note-taking)
 *   **Purpose:** Your self-hosted, open-source, lightweight note-taking service.
 
-### 3.6. `flowise` (Visual AI Chatbot Builder)
+### 3.4. `flowise` (Visual AI Chatbot Builder)
 *   **Purpose:** A low-code tool for building and deploying AI chatbots and LLM applications visually.
+*   **Public URL:** `https://flowise.arisegulf.com/`
 
-### 3.7. `certbot` (SSL Certificate Management)
+### 3.5. `certbot` (SSL Certificate Management)
 *   **Purpose:** Automates the process of obtaining and renewing free SSL/TLS certificates from Let's Encrypt.
 *   **Key Operation:**
     ```bash
     docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d your-new-domain.com
     ```
 
-### 3.8. `qdrant` (Vector Database)
+### 3.6. `qdrant` (Vector Database)
 *   **Purpose:** Your specialized vector database for storing and searching embeddings, crucial for RAG applications.
 
-### 3.9. `streamlit-app` (Streamlit Frontend Application)
+### 3.7. `streamlit-app` (Streamlit Frontend Application)
 *   **Purpose:** A Python web application serving as a frontend for some of your AI services.
 
-### 3.10. Link Shortener & Preview Generator (`link.arisegulf.com`)
-*   **Purpose:** A custom Nginx configuration that creates branded short links with rich social media previews.
-
-### 3.11. `baserow` (Self-Hosted Relational Database)
+### 3.8. `baserow` (Self-Hosted Relational Database)
 *   **Purpose:** Your self-hosted, open-source alternative to Airtable, serving as the central database for your "Arise Operations" system.
 *   **Image:** `baserow/baserow:1.35.2`
 *   **Key Operations:**
@@ -106,43 +98,49 @@ Here's a breakdown of each service defined in your `docker-compose.yml` on the V
     *   **Check Logs:** `docker compose logs baserow` (from `~/baserow-vps/`)
 *   **Note:** The Baserow service runs from its own `docker-compose.yml` in the `~/baserow-vps/` directory.
 
-### 3.12. `n8n-mcp` (Model Context Protocol Server)
+### 3.9. `n8n-mcp` (Model Context Protocol Server)
 *   **Purpose:** A specialized server that integrates with n8n for managing and serving n8n node documentation.
 
-### 3.13. `arun-dashboard` (React Frontend for Baserow Data)
+### 3.10. `arun-dashboard` (React Frontend for Baserow Data)
 *   **Purpose:** A custom-built React web application to provide a modern dashboard for team members.
 
-### 3.14. `evolution-api` (WhatsApp API Gateway)
+### 3.11. `evolution-api` (WhatsApp API Gateway)
 *   **Purpose:** A self-hosted, open-source API that acts as a gateway to WhatsApp for sending and receiving messages. This powers the "Whatsapp Buddy" workflow in n8n.
 *   **Image:** `atendai/evolution-api`
-*   **Database:** Requires a **PostgreSQL** database. It does **not** support MongoDB.
+*   **Database:** Requires a **PostgreSQL** database.
 *   **Public URL:** `https://evolution.arisegulf.com`
 *   **Manager UI:** `https://evolution.arisegulf.com/manager`
-*   **Configuration:** Managed via an `evolution.env` file in the project root.
-    ```bash
-    # evolution.env
-    DATABASE_ENABLED=true
-    DATABASE_PROVIDER=postgresql
-    DATABASE_CONNECTION_URI=postgresql://evolution_user:your_secure_password_here@postgres:5432/evolution_db?schema=public
 
-    AUTHENTICATION_API_KEY=EvolVps_sTr0ng_@p1_kEy
-    ```
-*   **n8n Integration:**
-    *   Create new credentials in n8n with:
-        *   **API URL:** `https://evolution.arisegulf.com`
-        *   **API Key:** `EvolVps_sTr0ng_@p1_kEy`
-*   **Important Note:** This is an unofficial WhatsApp API. Using it carries a risk of the connected phone number being blocked by WhatsApp. Use it responsibly.
-
-### 3.15. `postgres` (PostgreSQL Database for Evolution API)
+### 3.12. `postgres` (PostgreSQL Database for Evolution API)
 *   **Purpose:** A dedicated PostgreSQL database instance required by the `evolution-api` service.
 *   **Image:** `postgres:15`
 *   **Volumes:** `postgres_data` (for persistent database storage).
 
 ---
 
-## 4. Standard Operating Procedures (SOPs)
+## 4. Future Roadmap
 
-### 4.1. How to Upgrade a Service (Example: Baserow)
+### 4.1. `arisegulf.com` Website
+*   **Status:** The previous WordPress-based website has been decommissioned to conserve server resources.
+*   **Plan:** The main website, `arisegulf.com`, is planned to be rebuilt from the ground up as a modern, high-performance web application using **React** and **Tailwind CSS**.
+*   **Backend Strategy:** To manage content dynamically, the new React frontend will likely connect to a headless CMS. **Baserow** is the primary candidate for this role, allowing for easy content updates via its API without needing to redeploy the frontend application.
+
+---
+
+## 5. Decommissioned Services
+
+The following services were previously running but have been permanently disabled to streamline the server and free up resources. Their configurations have been removed from `docker-compose.yml` and Nginx.
+
+*   **WordPress Sites:** `arisegulf-web`, `blog-web`, `dearzindagi-web`, `islam-web`.
+*   **Main MySQL Database:** The `db` container that served the WordPress sites.
+*   **Metabase:** The business intelligence tool.
+*   **shrtn:** The `cordlesswool/shrtn` link shortener service.
+
+---
+
+## 6. Standard Operating Procedures (SOPs)
+
+### 6.1. How to Upgrade a Service (Example: Baserow)
 
 This procedure documents the successful upgrade of Baserow from `1.24.0` to `1.35.2`. It should be adapted for other services.
 
@@ -175,7 +173,7 @@ This procedure documents the successful upgrade of Baserow from `1.24.0` to `1.3
 1.  Check the service logs for any errors: `docker compose logs -f <service_name>`.
 2.  Access the service's UI and check the settings/admin page to confirm the new version number.
 
-### 4.2. Troubleshooting SSL Certificate (Certbot) Failures
+### 6.2. Troubleshooting SSL Certificate (Certbot) Failures
 
 When creating a new subdomain, you must issue an SSL certificate for it. If the `certbot` command fails, follow these steps.
 
@@ -214,7 +212,7 @@ When creating a new subdomain, you must issue an SSL certificate for it. If the 
 *   **Root Cause:** The current version of Evolution API (v2+) does **not** support MongoDB. It requires PostgreSQL or MySQL.
 *   **Solution:** Do not use MongoDB. You must configure the service to use a PostgreSQL database. Refer to the service documentation for the correct `docker-compose.yml` and environment variable setup.
 
-### 4.3. Troubleshooting Evolution API (WhatsApp API Gateway)
+### 6.3. Troubleshooting Evolution API (WhatsApp API Gateway)
 
 **Problem:** Initial setup and subsequent instance recreation of the `evolution-api` service led to persistent `ERROR [Redis] redis disconnected` messages in the `evolution-api` logs, `502 Bad Gateway` errors from Nginx, and the inability to generate QR codes in the Evolution Manager UI.
 
@@ -245,13 +243,12 @@ When creating a new subdomain, you must issue an SSL certificate for it. If the 
 *   Ensure healthcheck commands use tools available within the container image.
 
 ---
-## 5. Networks & Volumes
+
+## 7. Networks & Volumes
 *   **Network:** All services are connected to a single `app-network`, allowing them to communicate with each other internally using their container names as hostnames.
 *   **Named Volumes:** Named volumes ensure that your application data persists even if containers are removed or recreated.
 
 ---
-## 6. Deploying React SPA Dashboards & Appsmith Setup
-(Existing content remains)
 
-### 7.3. Pending Issues
-*   **WordPress Database Connection:** The `arisegulf.com` WordPress site is currently showing "Error establishing a database connection". This is likely due to missing or incorrect `ARISEGULF_DB_PASSWORD` in the `.env` file. This needs to be resolved to bring the main website back online.
+## 8. Deploying React SPA Dashboards & Appsmith Setup
+(Existing content remains)
