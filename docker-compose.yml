@@ -19,9 +19,10 @@ services:
       - ./website_data/islam.dearzindagi.space:/var/www/html/islam.dearzindagi.space
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-      - /var/www/html/arun_dashboard:/var/www/html/arun_dashboard:ro  # React build mounted
     networks:
       - app-network
+    depends_on:
+      - arisegulf-web
 
   # 2. Main Database
   db:
