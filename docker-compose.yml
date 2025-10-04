@@ -213,7 +213,8 @@ services:
     env_file:
       - ./evolution.env
     environment:
-      - REDIS_URI=redis://evolution-redis:6379/0
+      - REDIS_HOST=evolution-redis
+      - REDIS_PORT=6379
       - REDIS_ENABLED=true
       - CONFIG_SESSION_PHONE_VERSION=2.3000.1025062854
     volumes:
