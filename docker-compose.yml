@@ -197,7 +197,7 @@ services:
 
   # Redis Service for Evolution API
   redis:
-    image: redis:latest
+    image: redis:7.0.12-alpine
     container_name: evolution-redis
     restart: unless-stopped
     volumes:
@@ -210,13 +210,14 @@ services:
     image: atendai/evolution-api
     container_name: evolution-api
     restart: always
-    env_file:
-      - ./evolution.env
     environment:
-      - REDIS_HOST=evolution-redis
-      - REDIS_PORT=6379
-      - REDIS_ENABLED=true
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://evolution_user:g3m1n1_s3cur3_p@ssw0rd@postgres:5432/evolution_db?schema=public
+      - AUTHENTICATION_API_KEY=EvolVps_sTr0ng_@p1_kEy
       - CONFIG_SESSION_PHONE_VERSION=2.3000.1025062854
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://evolution-redis:6379/0
     volumes:
       - evolution_store:/evolution/store
       - evolution_instances:/evolution/instances
