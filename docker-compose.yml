@@ -17,6 +17,7 @@ services:
       - ./website_data/blog.arisegulf.com:/var/www/html/blog.arisegulf.com
       - ./website_data/dearzindagi.space:/var/www/html/dearzindagi.space
       - ./website_data/islam.dearzindagi.space:/var/www/html/islam.dearzindagi.space
+      - ./website_data/arun_dashboard:/var/www/html/arun_dashboard
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     networks:
