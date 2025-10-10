@@ -1,0 +1,10 @@
+﻿id,Payment ID,Team,Payment Requiest Date,Amount Require,Amount Paid,Payment Method,Notes,Status,Attachments
+12,12,Sunil,2025-09-18,30000,30000,UPI,Labour payment,Approved Full Amount,
+21,21,Arun,2025-09-30,2000,2000,UPI,Self,Approved Full Amount,
+22,22,Dampu,2025-09-30,50000,,,Please check and pay,Pending,Screenshot_20250912_182047_PhonePe.jpg (https://baserow.arisegulf.com/media/user_files/K3HhqqUnREdsOXoITrfYoPRsgNOCzHwU_a1d87080e52323cb1fef2c131c111498a2e8fe44eef572b29c165c03c45ba125.jpg)
+24,24,Arun,2025-10-01,40000,40000,UPI,Self,,
+25,25,,,,,,,,
+26,26,Other,,1000,,,,,
+27,27,,,,,,,,
+28,28,Arun,2025-10-03,11,,,testing,,
+29,29,Arun,2025-10-04,5000,5000,UPI,Self,Approved Full Amount,
