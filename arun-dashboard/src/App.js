@@ -154,7 +154,7 @@ function App() {
               <tbody>
                 {payments.length > 0 ? payments.map(item => (
                   <tr key={item.id}>
-                    <td>{item['Payment Requiest Date'] ? new Date(item['Payment Requiest Date']).toLocaleDateString() : 'N/A'}</td>
+                    <td>{item['Payment Request Date'] ? new Date(item['Payment Request Date']).toLocaleDateString('en-GB') : 'N/A'}</td>
                     <td>&#8377; {parseFloat(item['Amount Paid'] || '0').toFixed(2)}</td>
                     <td>{item['Payment Method']?.value || 'N/A'}</td>
                     <td>{item.Notes || ''}</td>
