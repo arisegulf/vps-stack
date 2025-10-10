@@ -301,6 +301,65 @@ The solution was to build the React application directly on the server before st
 *   **Deployments require a build step:** When deploying such applications, you must run the build command on the server to create the necessary files before starting the webserver.
 *   **Verify volume mounts inside the container:** If a volume mount is not working as expected, use `docker exec` to inspect the contents of the mounted directory inside the container. This is the most reliable way to confirm that the files are being correctly shared from the host.
 
+### 6.5. Modifying the React Dashboard (Example: Changing Date Format)
+
+**Task:** Change the date format in the "Payment History" table from the default `m/d/year` to `d/m/y`.
+
+**1. Investigation:**
+
+*   **Goal:** Find the code responsible for rendering the date.
+*   **Method:** Searched for the string "Payment History" within the `arun-dashboard` project.
+*   **Result:** The search pointed to the `src/App.js` file, which contained the HTML structure and data rendering logic for the payment history table.
+
+**2. Modification:**
+
+*   **Analysis:** The original code used `new Date(dateString).toLocaleDateString()` without any options. This method uses the server's or browser's default locale, which is often `en-US`, resulting in the `m/d/year` format.
+*   **Original Code:**
+    ```javascript
+    <td>{item['Payment Requiest Date'] ? new Date(item['Payment Requiest Date']).toLocaleDateString() : 'N/A'}</td>
+    ```
+*   **Solution:** To force the `d/m/y` format, we can specify a locale that uses it, such as `en-GB` (English - Great Britain).
+*   **Modified Code:**
+    ```javascript
+    <td>{item['Payment Requiest Date'] ? new Date(item['Payment Requiest Date']).toLocaleDateString('en-GB') : 'N/A'}</td>
+    ```
+
+**3. Deployment:**
+
+After modifying the code, the following steps were taken to deploy the changes:
+
+1.  **Commit and Push:** The changes to `src/App.js` were committed to the Git repository.
+    ```bash
+    git add src/App.js
+    git commit -m "feat(dashboard): change date format to d/m/y"
+    git push
+    ```
+2.  **Pull on Server:** The latest changes were pulled from the repository on the server.
+    ```bash
+    git pull
+    ```
+3.  **Rebuild the Application:** The React application was rebuilt on the server to include the changes.
+    ```bash
+    cd /root/my_project/arun-dashboard
+    npm run build
+    ```
+4.  **Restart Services:** The Docker containers were restarted to serve the new build files.
+    ```bash
+    cd /root/my_project
+    docker compose up -d --force-recreate
+    ```
+
+**4. Troubleshooting:**
+
+*   **Problem:** After the initial change, the date column showed "N/A".
+*   **Root Cause:** An incorrect assumption was made about a typo. The code was changed to use `Payment Request Date` as the key, but the actual key in the Baserow data was `Payment Requiest Date` (with a typo).
+*   **Solution:** The code was changed back to use the original key, `Payment Requiest Date`, and the deployment process was repeated.
+
+**Key Learnings:**
+
+*   **Data Consistency is Key:** Always verify the exact field names and data structures coming from your API or database. A small typo can lead to data not being displayed.
+*   **Explicit is Better Than Implicit:** Don't rely on default browser or server settings for formatting. Explicitly define the format you need, like using `toLocaleDateString('en-GB')`.
+
 ---
 
 ## 7. Networks & Volumes
