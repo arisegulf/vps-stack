@@ -242,6 +242,65 @@ When creating a new subdomain, you must issue an SSL certificate for it. If the 
 *   Explicitly configure Nginx resolvers for Docker internal DNS to prevent hostname resolution issues.
 *   Ensure healthcheck commands use tools available within the container image.
 
+### 6.4. Troubleshooting a React SPA (Single Page Application) Deployment
+
+**Problem:** The `arun.arisegulf.com` dashboard, a React-based Single Page Application (SPA), was showing a "404 Not Found" error from Nginx, even though the DNS and SSL certificates were correctly configured.
+
+**Root Cause Analysis:**
+
+The investigation followed several steps to diagnose the problem:
+
+1.  **Initial Nginx Configuration Check:** The Nginx configuration file for `arun.arisegulf.com` (`arun.arisegulf.com.conf`) was reviewed. It correctly defined the `root` directory and used `try_files` to handle SPA routing.
+
+2.  **`docker-compose.yml` Volume Mounts:** The `docker-compose.yml` file was inspected to ensure the React application's build files were correctly mounted into the `nginx-proxy` container. An initial error was found where the wrong directory was being mounted.
+
+3.  **Conflicting Nginx Configurations:** All files in the `nginx/conf.d` directory were reviewed. A conflicting `location` block for `/arun_dashboard/` was discovered in the `link.arisegulf.com.conf` file and was removed.
+
+4.  **Verifying the Build Artifacts:** After the above fixes, the issue persisted. The crucial diagnostic step was to check the contents of the mounted directory *inside* the `nginx-proxy` container.
+    *   **Command:** `docker exec nginx-proxy ls -l /var/www/html/arun_dashboard`
+    *   **Result:** The output was `total 0`, indicating the directory was empty.
+
+5.  **The Final Root Cause:** The `arun-dashboard/build` directory, which contains the compiled React application, is included in the project's `.gitignore` file. This is standard practice, as build artifacts are not typically committed to version control. The deployment process involved pulling the latest code from the Git repository on the server, but since the `build` directory was never committed, it was never created on the server. The volume mount in `docker-compose.yml` was pointing to a non-existent or empty directory on the host, which resulted in an empty directory inside the container.
+
+**Solution:**
+
+The solution was to build the React application directly on the server before starting the Docker containers.
+
+1.  **Navigate to the application directory:**
+    ```bash
+    cd /root/my_project/arun-dashboard
+    ```
+
+2.  **Install the dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Build the application:**
+    ```bash
+    npm run build
+    ```
+
+4.  **Return to the project root and restart the services:**
+    ```bash
+    cd /root/my_project
+    docker compose up -d --force-recreate
+    ```
+
+**Commands Used:**
+
+*   `npm install`: Installs the Node.js dependencies required by the React application.
+*   `npm run build`: Compiles the React application into static HTML, CSS, and JavaScript files in the `build` directory.
+*   `docker exec -it <container_name> <command>`: Executes a command inside a running container. This was critical for diagnosing the empty directory issue.
+*   `git status`, `git add`, `git commit`, `git pull`, `git push`: Standard Git commands used to manage and synchronize the configuration changes.
+*   `docker compose up -d --force-recreate`: Restarts the Docker services, applying any changes to the `docker-compose.yml` file or the mounted volumes.
+
+**Key Learnings:**
+
+*   **Build artifacts are not typically versioned:** For applications that require a build step (like React, Angular, Vue, etc.), the compiled files are generated locally or on a CI/CD server and are not stored in Git.
+*   **Deployments require a build step:** When deploying such applications, you must run the build command on the server to create the necessary files before starting the webserver.
+*   **Verify volume mounts inside the container:** If a volume mount is not working as expected, use `docker exec` to inspect the contents of the mounted directory inside the container. This is the most reliable way to confirm that the files are being correctly shared from the host.
+
 ---
 
 ## 7. Networks & Volumes
