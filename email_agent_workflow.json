@@ -1,0 +1,293 @@
+{
+  "name": "Email Agent via Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ]
+      },
+      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -600,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "Pl31KOMdX194wqGp",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are an email agent. Your job is to understand user requests from Telegram. You have three capabilities: 'send_email', 'delete_email', and 'chat'. The user will provide a natural language command. Your task is to determine the intent and extract the necessary parameters. For 'send_email', you must extract 'recipient', 'subject', and 'body'. For 'delete_email', you must extract the 'subject' of the email to be deleted. If the intent is not clear, default to 'chat'. Respond with a JSON object containing the 'intent' and its associated parameters. For example: {\"intent\": \"send_email\", \"recipient\": \"user@example.com\", \"subject\": \"Hi\", \"body\": \"Hello world\"} or {\"intent\": \"delete_email\", \"subject\": \"Spam\"} or {\"intent\": \"chat\", \"response\": \"I can help with sending or deleting emails.\"}."
+        }
+      },
+      "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+      "name": "AI Intent Detection",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -350,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "DwHpWcVBQTKERUYw",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = JSON.parse($json.output);\nreturn {\n  ...$json,\n  intent: result.intent,\n  recipient: result.recipient,\n  subject: result.subject,\n  body: result.body,\n  response: result.response\n};"
+      },
+      "id": "c3d4e5f6-a7b8-9012-3456-7890abcdef23",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "routing": {
+          "rules": {
+            "values": [
+              {
+                "operation": "stringEquals",
+                "value1": "={{ $('Parse AI Response').item.json.intent }}",
+                "value2": "send_email"
+              },
+              {
+                "operation": "stringEquals",
+                "value1": "={{ $('Parse AI Response').item.json.intent }}",
+                "value2": "delete_email"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      "id": "d4e5f6a7-b8c9-0123-4567-890abcdef34",
+      "name": "Route by Intent",
+      "type": "n8n-nodes-base.router",
+      "typeVersion": 1.2,
+      "position": [
+        150,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "={{ $('Parse AI Response').item.json.recipient }}",
+        "subject": "={{ $('Parse AI Response').item.json.subject }}",
+        "text": "={{ $('Parse AI Response').item.json.body }}",
+        "options": {}
+      },
+      "id": "e5f6a7b8-c9d0-1234-5678-90abcdef45",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 3,
+      "position": [
+        400,
+        100
+      ],
+      "credentials": {
+        "gmailOAuth2Api": {
+          "id": "YOUR_GMAIL_CREDENTIAL",
+          "name": "YOUR_GMAIL_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "search",
+        "query": "subject:\"{{ $('Parse AI Response').item.json.subject }}\"",
+        "options": {
+          "limit": 1
+        }
+      },
+      "id": "f6a7b8c9-d0e1-2345-6789-0abcdef56",
+      "name": "Search for Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 3,
+      "position": [
+        400,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2Api": {
+          "id": "YOUR_GMAIL_CREDENTIAL",
+          "name": "YOUR_GMAIL_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "delete",
+        "messageId": "={{ $('Search for Email').item.json.id }}",
+        "options": {}
+      },
+      "id": "a7b8c9d0-e1f2-3456-7890-bcdef1234567",
+      "name": "Delete Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 3,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Email sent successfully to {{ $('Parse AI Response').item.json.recipient }}",
+        "options": {}
+      },
+      "id": "b8c9d0e1-f2a3-4567-8901-cdef12345678",
+      "name": "Confirm Email Sent",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 3,
+      "position": [
+        650,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Email with subject '{{ $('Parse AI Response').item.json.subject }}' has been deleted.",
+        "options": {}
+      },
+      "id": "c9d0e1f2-a3b4-5678-9012-def123456789",
+      "name": "Confirm Email Deleted",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Parse AI Response').item.json.response }}",
+        "options": {}
+      },
+      "id": "d0e1f2a3-b4c5-6789-0123-ef1234567890",
+      "name": "Send Chat Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 3,
+      "position": [
+        400,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Intent Detection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Intent Detection": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Route by Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Intent": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search for Email",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Send Chat Response",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Confirm Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search for Email": {
+      "main": [
+        [
+          {
+            "node": "Delete Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Email": {
+      "main": [
+        [
+          {
+            "node": "Confirm Email Deleted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

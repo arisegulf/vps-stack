@@ -1,0 +1,199 @@
+{
+  "name": "Raw Material Agent part - 1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "materials-checkout-webhook",
+        "options": {}
+      },
+      "id": "d1af241d-3b5a-4067-bd37-410547aa15fe",
+      "name": "Tally Form Webhook5",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        -3184
+      ],
+      "webhookId": "3f78a742-e160-40cd-81ee-c451bde201d8"
+    },
+    {
+      "parameters": {
+        "jsCode": "const formFields = $json.body.data.fields;\n\n// --- FIX FOR NAME ---\n// Find the name field by its key. Then, find the selected option's text using its ID.\nconst nameField = formFields.find(f => f.key === 'question_JOVbxK');\nlet name = 'Unknown User'; // Default if not found\nif (nameField && nameField.value && nameField.options) {\n    const selectedOptionId = nameField.value[0]; // Tally dropdowns return an array of selected IDs\n    const selectedOption = nameField.options.find(opt => opt.id === selectedOptionId);\n    if (selectedOption) {\n        name = selectedOption.text; // This is the actual name (e.g., \"Sunil\")\n    }\n}\n\n// --- FINAL DATE FIX ---\nconst dateField = formFields.find(f => f.key === 'question_g9QX1D');\nconst dateStringFromTally = dateField ? dateField.value : null;\nlet date = null; // Start with null\n\nif (dateStringFromTally) {\n  // Append a time and UTC timezone identifier to create a full, unambiguous ISO string.\n  // Using noon (12:00) prevents timezone shifts from pushing the date to the previous day.\n  date = `${dateStringFromTally}T12:00:00.000Z`;\n}\n\n// --- FIX FOR MATERIALS STRING ---\nlet materialsString = '';\nconst materialQuantities = {};\n\nformFields.forEach(field => {\n    // Check if the field is a quantity input field (its label starts with \"How many \")\n    // and has a non-empty value.\n    if (field.label && field.label.startsWith('How many ') && field.value !== null && field.value !== undefined && field.value !== '') {\n        // Extract the material name from the label (e.g., \"How many ODF?\" -> \"ODF\")\n        const materialName = field.label.replace('How many ', '').replace('?', '').trim().toUpperCase();\n        const quantity = field.value;\n        materialQuantities[materialName] = quantity;\n    }\n});\n\n// Convert the collected materials and quantities into a readable string\nfor (const mat in materialQuantities) {\n    materialsString += `${mat}: ${materialQuantities[mat]}, `;\n}\n// Remove the trailing comma and space if there are materials\nif (materialsString.length > 0) {\n    materialsString = materialsString.slice(0, -2);\n} else {\n    materialsString = 'No materials selected'; // If no materials were selected\n}\n\nreturn [{\n    json: {\n        name: name,\n        date: date,\n        materials: materialsString,\n        originalTallyData: $json.body.data // Keep original for debugging if needed\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1568,
+        -3184
+      ],
+      "id": "acbacfa1-8a6e-48ab-b7a9-19c5b07ded87",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appOLKYoTHU3cPu2Z",
+          "mode": "list",
+          "cachedResultName": "Raw Material",
+          "cachedResultUrl": "https://airtable.com/appOLKYoTHU3cPu2Z"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblgoxa4ZQap85TG8",
+          "mode": "list",
+          "cachedResultName": "Pending Requests",
+          "cachedResultUrl": "https://airtable.com/appOLKYoTHU3cPu2Z/tblgoxa4ZQap85TG8"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "RequestID": "={{ $execution.id }}",
+            "Name": "={{ $json.name }}",
+            "Date": "={{ $json.date }}",
+            "Materials": "={{ $json.materials }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "RequestID",
+              "displayName": "RequestID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Materials",
+              "displayName": "Materials",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "id": "22090c96-ef4d-4953-adf9-62b477ec0e7e",
+      "name": "Log to Pending Requests5",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1328,
+        -3184
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "TnazYV8nwhLjYzFp",
+          "name": "Final Key arisenetwork.cg"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7522842632",
+        "text": "=🆕 New Material Request\nRequest ID: {{ $execution.id }}\nRequester: {{ $('Code5').item.json.name }}\nDate: {{ $('Code5').item.json.date }}\n    \nMaterials Needed:\n{{ $('Code5').item.json.materials }}\n    \nReply with:\n✅ YES {{ $execution.id }} – to approve\n❌ NO {{ $execution.id }} – to reject\n\n\n\n\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "2b4a2fda-f0bb-4409-8a49-d50048107090",
+      "name": "Send for Approval5",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1072,
+        -3184
+      ],
+      "webhookId": "771ee317-b702-4b79-a49c-7a913e1746c9",
+      "credentials": {
+        "telegramApi": {
+          "id": "TQxttYkrf10wvY99",
+          "name": "Lucy BOT"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Tally Form Webhook5": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Log to Pending Requests5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Pending Requests5": {
+      "main": [
+        [
+          {
+            "node": "Send for Approval5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dbe5882a-0e2a-4a35-8337-58656eadf207",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "83a4d6bc174da693a61ca01de3002bd6edb648df9f1b87ed5d7952dbaec76899"
+  },
+  "id": "onFnXAGm79YK4JAZ",
+  "tags": []
+}

@@ -1,0 +1,72 @@
+{
+  "name": "[3] Confirm Payment",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ]
+      },
+      "id": "b92a541e-4a47-441b-998b-3370e5871e59",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1080,
+        -500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "database_table_row",
+        "operation": "update",
+        "tableId": null,
+        "rowId": "={{ $json.callback_query.data.split('_')[1] }}",
+        "fields": {
+          "values": [
+            {
+              "name": "Status",
+              "value": "Paid"
+            }
+          ]
+        }
+      },
+      "id": "c1af241d-3b5a-4067-bd37-410547aa15fe",
+      "name": "Update Status to Paid",
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -860,
+        -500
+      ],
+      "credentials": {
+        "baserowApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "aNewWorkflowId2"
+}

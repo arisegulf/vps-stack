@@ -1,0 +1,478 @@
+{
+  "name": "Telegram Summary Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "chatIds": "-4985493223"
+        }
+      },
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        80
+      ],
+      "id": "158466c9-dd0d-4085-a8ac-de79799936f9",
+      "webhookId": "54d200e1-2227-47b0-bae5-9c6377f01d13",
+      "credentials": {
+        "telegramApi": {
+          "id": "Pl31KOMdX194wqGp",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "senderName",
+              "value": "={{ $json.message.from.last_name ? $json.message.from.first_name + ' ' + $json.message.from.last_name : $json.message.from.first_name }}"
+            },
+            {
+              "name": "messageText",
+              "value": "={{ $json.message.text || '' }}"
+            },
+            {
+              "name": "photo_id",
+              "value": "={{ $json.message.photo ? $json.message.photo[$json.message.photo.length-1].file_id : null }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Parse Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        80
+      ],
+      "id": "d35826b3-7503-4264-a6d4-a82b25b0bddf"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $('Parse Message').item.json.messageText }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Is there text?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        80
+      ],
+      "id": "084f07c6-c929-47a6-bda1-d01313c1bdd5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Parse Message').item.json.messageText }}",
+        "options": {
+          "systemMessage": "You are an advanced AI assistant specialized in processing and summarizing Telegram chat conversations clearly and accurately. Your goal is to extract the key points, main ideas, and relevant details from the chat messages in a concise, well-structured manner. Focus on maintaining the context and intent expressed by the users while avoiding unnecessary repetition or filler content.\n\nWhen summarizing, organize the points logically, grouping related ideas together. Highlight important decisions, action items, questions raised, and responses provided. Ensure that the tone remains professional, friendly, and helpful, suitable for keeping team members informed quickly without overwhelming them with raw message logs.\n\nProvide summaries that are easy to read and reference, using bullet points or numbered lists if applicable. If any specific names, timestamps, or metadata are critical to understanding the summary, include them appropriately.\n\nAvoid including irrelevant information or conversations off-topic to the main discussion. Remember, the summary should be an efficient tool for users to catch up on conversations fast, understand key takeaways, and track progress or concerns raised in the chat.\"\n\n"
+        }
+      },
+      "name": "AI Summary Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        -80
+      ],
+      "id": "21a6aeed-dff4-411b-ab6e-109904c51b2f"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app3jBSnP4KUuR15c",
+          "mode": "list",
+          "cachedResultName": "Telegram Message Summary",
+          "cachedResultUrl": "https://airtable.com/app3jBSnP4KUuR15c"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblfUnHW3l5ck6jAC",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/app3jBSnP4KUuR15c/tblfUnHW3l5ck6jAC"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Parse Message').item.json.senderName }}",
+            "Message": "={{ $('Parse Message').item.json.messageText }} ",
+            "Summary": "={{ $('AI Summary Agent').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "Save to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        688
+      ],
+      "id": "13aa6f1f-4862-4a2c-aede-cd150940d245",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "TnazYV8nwhLjYzFp",
+          "name": "Final Key arisenetwork.cg"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        80
+      ],
+      "id": "ac2d2562-6e4b-4485-94f0-6d9afcd506ca",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "DwHpWcVBQTKERUYw",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $('Parse Message').item.json.photo_id }}",
+              "operation": "isNotNull"
+            }
+          ]
+        }
+      },
+      "name": "If Photo Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        840,
+        80
+      ],
+      "id": "555a5454-2335-420e-a89b-35091a333034"
+    },
+    {
+      "parameters": {
+        "operation": "getFile",
+        "fileId": "={{ $('Parse Message').item.json.photo_id }}"
+      },
+      "name": "Get Photo File",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        -80
+      ],
+      "id": "f1d6a893-5771-4831-b8c0-0d10544a0c60",
+      "credentials": {
+        "telegramApi": {
+          "id": "Pl31KOMdX194wqGp",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "databaseId": 174,
+        "tableId": 719,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 6955,
+              "fieldValue": "={{ $('Parse Message').item.json.senderName }}"
+            },
+            {
+              "fieldId": 6956,
+              "fieldValue": "={{ $('Parse Message').item.json.messageText }} "
+            },
+            {
+              "fieldId": 6958,
+              "fieldValue": "{{ $json.summary }}"
+            },
+            {
+              "fieldId": 6959,
+              "fieldValue": "={{ $('Get Photo File').binary.data }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -80
+      ],
+      "id": "1312d601-a12b-419a-9291-42222125c9b9",
+      "name": "Create row with Photo",
+      "credentials": {
+        "baserowApi": {
+          "id": "aJD9mB0Fh7kqZpc2",
+          "name": "Baserow account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "databaseId": 174,
+        "tableId": 719,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 6955,
+              "fieldValue": "={{ $('Parse Message').item.json.senderName }}"
+            },
+            {
+              "fieldId": 6956,
+              "fieldValue": "={{ $('Parse Message').item.json.messageText }} "
+            },
+            {
+              "fieldId": 6958,
+              "fieldValue": "{{ $json.summary }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        240
+      ],
+      "id": "4552a53a-32b8-40a3-9390-0404845123f7",
+      "name": "Create row without Photo",
+      "credentials": {
+        "baserowApi": {
+          "id": "aJD9mB0Fh7kqZpc2",
+          "name": "Baserow account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "summary",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Empty Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        160,
+        240
+      ],
+      "id": "9891e68f-828f-4303-812e-8218a595f31b"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "summary",
+              "value": "={{ $('AI Summary Agent').item.json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Summary Value",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -80
+      ],
+      "id": "9c3a2b9b-8e4a-4b1a-8a6e-3435380b6349"
+    },
+    {
+      "parameters": {
+        "mode": "mergeByPosition"
+      },
+      "name": "Merge Summaries",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        80
+      ],
+      "id": "df182dc3-d709-4e43-922a-02894025d44d"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Message": {
+      "main": [
+        [
+          {
+            "node": "Is there text?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is there text?": {
+      "main": [
+        [
+          {
+            "node": "AI Summary Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "9891e68f-828f-4303-812e-8218a595f31b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Summary Agent": {
+      "main": [
+        [
+          {
+            "node": "9c3a2b9b-8e4a-4b1a-8a6e-3435380b6349",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "21a6aeed-dff4-411b-ab6e-109904c51b2f",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Photo Exists": {
+      "main": [
+        [
+          {
+            "node": "Get Photo File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create row without Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Photo File": {
+      "main": [
+        [
+          {
+            "node": "Create row with Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9891e68f-828f-4303-812e-8218a595f31b": {
+      "main": [
+        [
+          {
+            "node": "df182dc3-d709-4e43-922a-02894025d44d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9c3a2b9b-8e4a-4b1a-8a6e-3435380b6349": {
+      "main": [
+        [
+          {
+            "node": "df182dc3-d709-4e43-922a-02894025d44d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "df182dc3-d709-4e43-922a-02894025d44d": {
+      "main": [
+        [
+          {
+            "node": "555a5454-2335-420e-a89b-35091a333034",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f3c66dc2-11ac-46d1-bf75-f7c9419f22b9",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "3jIycPn41g0KLteg",
+  "tags": []
+}
